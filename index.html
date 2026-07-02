@@ -254,6 +254,8 @@ tr:hover td{background:#fafaf8}
         </div>
         <div class="topic-group-label">JP → EN Interpretation</div>
         <div class="topic-grid" id="builtinScenarioGrid"></div>
+        <div class="topic-group-label" style="margin-top:14px">EN → JP Interpretation</div>
+        <div class="topic-grid" id="enScenarioGrid"></div>
         <div id="userTopicGroupWrap" style="display:none">
           <div class="topic-group-label">Custom topics</div>
           <div class="topic-grid" id="customTopicGrid"></div>
@@ -1051,21 +1053,9 @@ function buildTopicSelectScreen(){
   const customWrap=document.getElementById('userTopicGroupWrap');
   if(!scenGrid)return;
 
-  // JP→EN scenarios
   scenGrid.innerHTML='';
-  // EN→JP grid — inject dynamically
-  let enGrid = document.getElementById('enScenarioGrid');
-  if(!enGrid){
-    enGrid = document.createElement('div');
-    enGrid.id='enScenarioGrid';
-    enGrid.className='topic-grid';
-    const enLabel = document.createElement('div');
-    enLabel.className='topic-group-label';
-    enLabel.textContent='EN → JP Interpretation';
-    scenGrid.parentNode.insertBefore(enLabel, scenGrid.nextSibling);
-    scenGrid.parentNode.insertBefore(enGrid, enLabel.nextSibling);
-  }
-  enGrid.innerHTML='';
+  const enGrid = document.getElementById('enScenarioGrid');
+  if(enGrid) enGrid.innerHTML='';
 
   scenarios.forEach((s,i)=>{
     const isEN = s.lang==='en';
@@ -1078,7 +1068,7 @@ function buildTopicSelectScreen(){
         <span>${s.diff}</span>
       </div>`;
     card.onclick=()=>startScenario(i);
-    if(isEN) enGrid.appendChild(card);
+    if(isEN && enGrid) enGrid.appendChild(card);
     else scenGrid.appendChild(card);
   });
 
