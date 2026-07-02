@@ -427,6 +427,9 @@ const builtinTopics = [
 ];
 
 const STORAGE_KEY = 'jp_practice_results';
+const JSONBIN_ID = '6a461e1af5f4af5e29528a02';
+const JSONBIN_KEY = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
 
 const scenarios=[
   {label:"IT · deployment",domain:"IT project",diff:"★★★",diffClass:"b-hard",speaker:"Tanaka-san",role:"Project Manager",initials:"TK",meeting:"IT Deployment Review",
@@ -471,6 +474,9 @@ let currentUser='';
 let _useServer = false;
 
 async function checkServer(){
+  const host = window.location.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168') || host.startsWith('172.') || host.startsWith('10.');
+  if(!isLocal){ _useServer=false; return; }
   try{
     const r = await fetch('/api/ping', {signal: AbortSignal.timeout(1500)});
     if(r.ok){
@@ -481,46 +487,70 @@ async function checkServer(){
   }catch(e){ _useServer=false; }
 }
 
+const _jbHeaders = {
+  'Content-Type': 'application/json',
+  'X-Master-Key': JSONBIN_KEY,
+  'X-Bin-Versioning': 'false'
+};
+
+async function jbLoad(){
+  try{
+    const r = await fetch(JSONBIN_URL+'/latest', {headers:{'X-Master-Key':JSONBIN_KEY}});
+    if(r.ok){ const d=await r.json(); return d.record.results||[]; }
+  }catch(e){}
+  return null;
+}
+
+async function jbSave(results){
+  try{
+    await fetch(JSONBIN_URL, {
+      method:'PUT',
+      headers:_jbHeaders,
+      body:JSON.stringify({results})
+    });
+    return true;
+  }catch(e){ return false; }
+}
+
 function loadResults(){
   try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){return[];}
 }
 
 async function loadResultsFromServer(){
-  try{
-    const r = await fetch('/api/results');
-    if(r.ok) return await r.json();
-  }catch(e){}
+  const cloud = await jbLoad();
+  if(cloud!==null) return cloud;
   return loadResults();
 }
 
-function saveResult(rec){
-  // Always save to localStorage as backup
-  const data = loadResults();
-  data.push(rec);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  // Also save to server if available
-  if(_useServer){
-    fetch('/api/results',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(rec)
-    }).catch(()=>{});
-  }
+async function saveResult(rec){
+  // Save to localStorage as backup
+  const local = loadResults();
+  local.push(rec);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
+  // Save to JSONBin cloud
+  try{
+    const cloud = await jbLoad();
+    const data = cloud!==null ? cloud : local;
+    if(!data.find(r=>r.datetime===rec.datetime&&r.name===rec.name&&r.sentence===rec.sentence)){
+      data.push(rec);
+    }
+    await jbSave(data);
+  }catch(e){}
 }
 
-function clearResults(){
+async function clearResults(){
   if(!confirm('Clear all results? This cannot be undone.'))return;
   localStorage.removeItem(STORAGE_KEY);
-  if(_useServer){
-    fetch('/api/results/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});
-  }
+  await jbSave([]);
   renderAdmin();
 }
 
 function clearTraineeFromServer(name){
-  if(_useServer){
-    fetch('/api/results/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})}).catch(()=>{});
-  }
+  jbLoad().then(cloud=>{
+    if(cloud===null)return;
+    const filtered=cloud.filter(r=>r.name!==name);
+    jbSave(filtered);
+  });
 }
 
 /* ---------- AUTH ---------- */
@@ -763,7 +793,7 @@ function startRec(){
   try{recognition.start();}catch(e){ta.textContent='Could not start. Use the Type option.';}
 }
 
-function revealAndScore(){
+async function revealAndScore(){
   document.getElementById('waveEN').style.display='none';
   document.getElementById('btnStop').disabled=true;
   document.getElementById('btnRecord').disabled=false;
@@ -798,7 +828,7 @@ function revealAndScore(){
   const scenarioLabel=isCustom?window._customTopic.name:scenarios[cur].label;
   const sentenceText=isCustom?window._customTopic.sentences[sentIdx]:(sent?sent.jp:'');
   const modelText2=(isCustom&&window._customTopic.models)?window._customTopic.models[sentIdx]:(sent?sent.model:'');
-  saveResult({
+  await saveResult({
     name:currentUser,
     scenario:scenarioLabel,
     sentence:sentenceText,
