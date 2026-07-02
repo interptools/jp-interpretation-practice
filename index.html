@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JP Interpretation Voice Practice</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;min-height:100vh;padding:16px}
+.app{max-width:100%;width:100%}
+.hidden{display:none!important}
+
+/* LOGIN SCREEN */
+.login-screen{max-width:380px;margin:60px auto}
+.login-card{background:#fff;border:1px solid #d3d1c7;border-radius:14px;padding:28px}
+.login-title{font-size:17px;font-weight:600;color:#1a1a18;margin-bottom:4px}
+.login-sub{font-size:13px;color:#888780;margin-bottom:20px}
+.field-label{font-size:12px;color:#5f5e5a;font-weight:500;margin-bottom:4px}
+.field-hint{font-size:11px;color:#9ca3af;margin-bottom:8px}
+input[type=text],input[type=password]{width:100%;font-size:14px;padding:9px 12px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;margin-bottom:14px;outline:none;font-family:inherit}
+input[type=text]:focus,input[type=password]:focus{border-color:#378add}
+.login-err{font-size:12px;color:#991b1b;margin-bottom:10px;display:none}
+.btn-full{width:100%;font-size:14px;padding:10px;border-radius:8px;border:none;background:#1a1a18;color:#fff;cursor:pointer;font-weight:500;font-family:inherit}
+.btn-full:hover{background:#2c2c2a}
+.admin-link{text-align:center;margin-top:12px;font-size:12px;color:#888780}
+.admin-link a{color:#378add;cursor:pointer;text-decoration:none}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-title{font-size:15px;font-weight:600;color:#1a1a18}
+.nav-user{font-size:12px;color:#888780;background:#f1efe8;padding:3px 10px;border-radius:12px}
+.nav-right{display:flex;gap:6px}
+.nav-btn{font-size:12px;padding:5px 12px;border-radius:7px;border:1px solid #d3d1c7;background:#fff;color:#5f5e5a;cursor:pointer}
+.nav-btn:hover{background:#f1efe8}
+.nav-btn.active-nav{background:#1a1a18;color:#fff;border-color:#1a1a18}
+
+/* SCENARIO TABS */
+.scenario-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid #d3d1c7;background:#fff;color:#5f5e5a;cursor:pointer;transition:all 0.15s}
+.tab:hover{background:#f1efe8}
+.tab.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 370px;gap:12px;align-items:start}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+
+/* MEETING CARD */
+.meeting-card{background:#fff;border:1px solid #d3d1c7;border-radius:12px;overflow:hidden}
+.meeting-header{background:#1a1a18;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.meeting-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.meeting-title{font-size:13px;color:#fff;font-weight:500}
+.meeting-sub{font-size:11px;color:#9ca3af}
+.speaker-info{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1efe8}
+.avatar{width:34px;height:34px;border-radius:50%;background:#e6f1fb;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#0c447c;flex-shrink:0}
+.spk-name{font-size:13px;font-weight:500;color:#1a1a18}
+.spk-role{font-size:11px;color:#888780}
+.badges{display:flex;gap:5px;margin-left:auto}
+.badge{font-size:11px;padding:2px 7px;border-radius:10px;font-weight:500}
+.b-domain{background:#e6f1fb;color:#0c447c}
+.b-hard{background:#faece7;color:#712b13}
+.b-med{background:#faeeda;color:#633806}
+.progress-bar{height:2px;background:#f1efe8}
+.progress-fill{height:100%;background:#1a1a18;transition:width 0.4s ease}
+.conversation{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.msg{display:flex;gap:8px;align-items:flex-start;opacity:0.3;transition:opacity 0.3s}
+.msg.active{opacity:1}
+.msg.done{opacity:0.75}
+.msg-av{width:28px;height:28px;border-radius:50%;background:#e6f1fb;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0c447c;flex-shrink:0;margin-top:2px}
+.msg-inner{flex:1;min-width:0}
+.msg-bubble{background:#f5f4f0;border-radius:0 8px 8px 8px;padding:8px 12px}
+.msg-bubble.active-bubble{background:#e6f1fb;border:1px solid #b5d4f4}
+.msg-lbl{font-size:10px;color:#888780;margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+.msg-jp{font-size:13px;color:#1a1a18;line-height:1.6}
+.msg-jp.blurred{filter:blur(5px);user-select:none;transition:filter 0.3s}
+.your-bubble{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:7px 12px;font-size:12px;color:#166534;line-height:1.5;margin-top:4px;display:none;font-style:italic}
+.your-bubble.show{display:block}
+.model-bubble{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:7px 12px;font-size:12px;color:#92400e;line-height:1.5;margin-top:4px;display:none}
+.model-bubble.show{display:block}
+.model-lbl{font-size:10px;color:#b45309;font-weight:500;margin-bottom:2px}
+
+/* BOOTH */
+.booth-card{background:#fff;border:1px solid #d3d1c7;border-radius:12px;padding:14px;position:sticky;top:16px}
+.booth-title{font-size:11px;color:#888780;text-transform:uppercase;letter-spacing:0.05em;font-weight:500;margin-bottom:10px}
+.step-pills{display:flex;gap:5px;margin-bottom:10px}
+.sp{font-size:11px;padding:3px 9px;border-radius:10px;background:#f1efe8;color:#888780;font-weight:500}
+.sp.active-sp{background:#1a1a18;color:#fff}
+.sp.done-sp{background:#e6f1fb;color:#0c447c}
+.tip-box{background:#fffbeb;border-left:2px solid #f59e0b;padding:7px 10px;border-radius:0 6px 6px 0;font-size:12px;color:#92400e;margin-bottom:10px;line-height:1.5;display:none}
+.wave{display:none;align-items:center;gap:3px;height:22px;margin-bottom:8px}
+.wb{width:3px;border-radius:2px;animation:wv 0.8s ease-in-out infinite}
+.wb.jp{background:#378add}.wb.en{background:#e24b4a}
+.wb:nth-child(2){animation-delay:.1s}.wb:nth-child(3){animation-delay:.2s}.wb:nth-child(4){animation-delay:.3s}.wb:nth-child(5){animation-delay:.15s}
+@keyframes wv{0%,100%{height:4px}50%{height:18px}}
+.wave-lbl{font-size:11px;color:#888780;margin-left:6px}
+.transcript-area{background:#f5f4f0;border:1px solid #d3d1c7;border-radius:7px;padding:8px 10px;font-size:12px;color:#1a1a18;min-height:44px;line-height:1.5;margin-bottom:8px;font-style:italic;display:none}
+textarea.type-input{width:100%;font-size:13px;padding:8px 10px;border:1px solid #d3d1c7;border-radius:7px;margin-bottom:8px;min-height:60px;font-family:inherit;resize:vertical;background:#fff;color:#1a1a18;display:none}
+textarea.type-input:focus{outline:none;border-color:#378add}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+button{font-size:12px;padding:7px 11px;border-radius:7px;border:1px solid #d3d1c7;background:#fff;color:#1a1a18;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:500;transition:all 0.15s;white-space:nowrap;font-family:inherit}
+button:hover{background:#f1efe8}
+button:active{transform:scale(0.97)}
+.btn-primary{background:#1a1a18;color:#fff;border-color:#1a1a18}
+.btn-primary:hover{background:#2c2c2a}
+.btn-rec{background:#e24b4a;color:#fff;border-color:#e24b4a}
+.btn-green{background:#16a34a;color:#fff;border-color:#16a34a}
+.btn-green:hover{background:#15803d}
+button:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+.score-section{margin-top:10px;padding-top:10px;border-top:1px solid #f1efe8;display:none}
+.score-row{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
+.score-big{font-size:30px;font-weight:700;color:#1a1a18}
+.score-ten{font-size:13px;color:#888780}
+.score-comment{font-size:12px;color:#5f5e5a}
+.fb-item{font-size:12px;padding:3px 0;border-bottom:1px solid #f5f4f0;line-height:1.4}
+.fb-item.hit{color:#166534}.fb-item.miss{color:#991b1b}
+.session-bar{text-align:center;font-size:12px;color:#888780;padding:10px 0}
+
+/* TOPIC SELECT SCREEN */
+.topic-select-screen{max-width:100%;padding:4px 0}
+.topic-select-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.topic-select-title{font-size:15px;font-weight:600;color:#1a1a18}
+.topic-select-sub{font-size:12px;color:#888780;margin-top:2px}
+.topic-group-label{font-size:11px;font-weight:500;color:#888780;text-transform:uppercase;letter-spacing:0.05em;margin:14px 0 8px}
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:4px}
+.topic-pick-card{background:#fff;border:1px solid #d3d1c7;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:4px}
+.topic-pick-card:hover{border-color:#378add;background:#f8fbff}
+.topic-pick-name{font-size:13px;font-weight:500;color:#1a1a18}
+.topic-pick-meta{font-size:11px;color:#9ca3af;display:flex;gap:8px;align-items:center}
+.topic-pick-badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:8px}
+.tpb-ja{background:#e6f1fb;color:#0c447c}
+.tpb-en{background:#faeeda;color:#633806}
+.tpb-builtin{background:#eaf3de;color:#3b6d11}
+.tpb-custom{background:#EEEDFE;color:#3C3489}
+
+/* CUSTOM TOPIC */
+.topic-screen{max-width:100%}
+.topic-form{background:#fff;border:1px solid #d3d1c7;border-radius:12px;padding:20px;margin-bottom:12px}
+.topic-label{font-size:12px;font-weight:500;color:#5f5e5a;margin-bottom:4px;display:block}
+.topic-hint{font-size:11px;color:#9ca3af;margin-bottom:8px}
+.topic-input{width:100%;font-size:13px;padding:9px 12px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;margin-bottom:10px;font-family:inherit}
+.topic-input:focus{outline:none;border-color:#378add}
+textarea.topic-script{width:100%;font-size:13px;padding:9px 12px;border:1px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;min-height:140px;font-family:inherit;resize:vertical;margin-bottom:10px}
+textarea.topic-script:focus{outline:none;border-color:#378add}
+.topic-preview{background:#f5f4f0;border:1px solid #d3d1c7;border-radius:8px;padding:12px;margin-top:10px;display:none}
+.topic-preview-title{font-size:11px;color:#888780;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px}
+.sentence-chip{background:#fff;border:1px solid #d3d1c7;border-radius:6px;padding:6px 10px;font-size:12px;color:#1a1a18;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px}
+.chip-num{font-size:11px;color:#888780;font-weight:600;min-width:16px;margin-top:1px}
+.saved-topics{background:#fff;border:1px solid #d3d1c7;border-radius:12px;overflow:hidden}
+.saved-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f1efe8;gap:10px;cursor:pointer}
+.saved-row:last-child{border-bottom:none}
+.saved-row:hover{background:#fafaf8}
+.saved-name{font-size:13px;font-weight:500;color:#1a1a18;flex:1}
+.saved-meta{font-size:11px;color:#9ca3af}
+.saved-del{font-size:11px;color:#991b1b;padding:3px 8px;border:1px solid #fca5a5;border-radius:5px;background:#fff;cursor:pointer}
+.saved-del:hover{background:#fee2e2}
+
+/* ADMIN SCREEN */
+.admin-screen{max-width:100%}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.admin-title{font-size:16px;font-weight:600;color:#1a1a18}
+.trainee-select-screen{max-width:560px;margin:0 auto;padding-top:20px}
+.trainee-select-title{font-size:14px;font-weight:500;color:#1a1a18;margin-bottom:4px}
+.trainee-select-sub{font-size:12px;color:#888780;margin-bottom:16px}
+.trainee-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:16px}
+.trainee-card{background:#fff;border:1px solid #d3d1c7;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.15s}
+.trainee-card:hover{border-color:#378add;background:#f8fbff}
+.trainee-initials{width:36px;height:36px;border-radius:50%;background:#e6f1fb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0c447c;margin-bottom:10px}
+.trainee-name{font-size:13px;font-weight:500;color:#1a1a18;margin-bottom:2px}
+.trainee-meta{font-size:11px;color:#9ca3af}
+.trainee-score-badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:6px}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:#fff;border:1px solid #d3d1c7;border-radius:10px;padding:12px 14px}
+.stat-label{font-size:11px;color:#888780;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:600;color:#1a1a18}
+.stat-sub{font-size:11px;color:#9ca3af}
+.admin-card{background:#fff;border:1px solid #d3d1c7;border-radius:12px;overflow:hidden}
+.admin-card-header{padding:10px 14px;border-bottom:1px solid #f1efe8;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.admin-card-title{font-size:13px;font-weight:500;color:#1a1a18}
+.back-btn{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid #d3d1c7;background:#fff;color:#5f5e5a;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.back-btn:hover{background:#f1efe8}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 12px;font-size:11px;color:#888780;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #f1efe8;background:#fafaf8}
+td{padding:8px 12px;border-bottom:1px solid #f5f4f0;color:#1a1a18;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf8}
+.score-pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.s-high{background:#dcfce7;color:#166534}
+.s-mid{background:#fef9c3;color:#854d0e}
+.s-low{background:#fee2e2;color:#991b1b}
+.s-skip{background:#f1efe8;color:#888780}
+.clear-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid #fca5a5;background:#fff;color:#991b1b;cursor:pointer}
+.clear-btn:hover{background:#fee2e2}
+.empty-state{padding:32px;text-align:center;color:#9ca3af;font-size:13px}
+.progress-ring{display:flex;align-items:center;gap:6px;margin-top:4px}
+.ring-bar{flex:1;height:4px;background:#f1efe8;border-radius:2px;overflow:hidden}
+.ring-fill{height:100%;border-radius:2px;background:#378add;transition:width 0.3s}
+
+/* ADMIN LOGIN */
+.admin-login{max-width:340px;margin:60px auto}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-card" style="max-width:380px;margin:60px auto">
+    <div class="login-title">JP Interpretation Practice</div>
+    <div class="login-sub">Sign in to start your session</div>
+    <div class="field-label">Your name</div>
+    <div class="field-hint">Format: firstname.lastname (e.g. reymar.arroyo)</div>
+    <input type="text" id="loginName" placeholder="firstname.lastname" autocomplete="off">
+    <div class="login-err" id="loginErr">Please use the format: firstname.lastname</div>
+    <button class="btn-full" onclick="doLogin()">Start practice</button>
+    <div class="admin-link"><a onclick="showAdminLogin()">Admin access</a></div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="adminLoginScreen" class="hidden">
+  <div class="login-card" style="max-width:340px;margin:60px auto">
+    <div class="login-title">Admin access</div>
+    <div class="login-sub">Enter admin password to continue</div>
+    <div class="field-label">Password</div>
+    <input type="password" id="adminPwd" placeholder="Enter password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <div class="login-err" id="adminErr">Incorrect password</div>
+    <button class="btn-full" onclick="doAdminLogin()">Sign in</button>
+    <div class="admin-link"><a onclick="showLogin()">Back to login</a></div>
+  </div>
+</div>
+
+<!-- PRACTICE SCREEN -->
+<div id="practiceScreen" class="hidden">
+  <div class="app">
+    <div class="nav">
+      <div class="nav-left">
+        <div class="nav-title">JP Interpretation Practice</div>
+        <div class="nav-user" id="navUser"></div><div id="serverBadge" style="display:none;font-size:11px;background:#eaf3de;color:#3b6d11;padding:2px 8px;border-radius:10px;font-weight:500">&#9679; Live</div>
+      </div>
+      <div class="nav-right">
+        <button class="nav-btn" id="btnChangeTopic" onclick="showTopicSelect()" style="display:none">&#8592; Topics</button>
+        <button class="nav-btn" onclick="doLogout()">Sign out</button>
+      </div>
+    </div>
+    <!-- TOPIC SELECT -->
+    <div id="topicSelectScreen">
+      <div class="topic-select-screen">
+        <div class="topic-select-header">
+          <div>
+            <div class="topic-select-title">Choose a topic to practice</div>
+            <div class="topic-select-sub">Select any topic below to begin your interpretation session</div>
+          </div>
+        </div>
+        <div class="topic-group-label">Built-in scenarios</div>
+        <div class="topic-grid" id="builtinScenarioGrid"></div>
+        <div class="topic-group-label">MUJI vocabulary drills</div>
+        <div class="topic-grid" id="builtinMujiGrid"></div>
+        <div id="userTopicGroupWrap" style="display:none">
+          <div class="topic-group-label">Your custom topics</div>
+          <div class="topic-grid" id="customTopicGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRACTICE AREA -->
+    <div id="practiceArea" class="hidden">
+    <div class="main-grid">
+      <div class="meeting-card">
+        <div class="meeting-header">
+          <div class="meeting-dot"></div>
+          <div><div class="meeting-title" id="meetingTitle">Teams Meeting — In progress</div><div class="meeting-sub" id="meetingSub"></div></div>
+        </div>
+        <div class="speaker-info">
+          <div class="avatar" id="avatarEl">TK</div>
+          <div><div class="spk-name" id="spkName"></div><div class="spk-role" id="spkRole"></div></div>
+          <div class="badges"><span class="badge b-domain" id="bdgDomain"></span><span class="badge" id="bdgDiff"></span></div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="conversation" id="conversation"></div>
+      </div>
+      <div class="booth-card">
+        <div class="booth-title">Interpreter booth</div>
+        <div class="step-pills" id="stepPills">
+          <span class="sp active-sp">1 Listen</span>
+          <span class="sp">2 Render</span>
+          <span class="sp">3 Next</span>
+        </div>
+        <div class="tip-box" id="tipBox"></div>
+        <div class="wave" id="waveJP"><div class="wb jp"></div><div class="wb jp"></div><div class="wb jp"></div><div class="wb jp"></div><div class="wb jp"></div><span class="wave-lbl">Speaking...</span></div>
+        <div class="wave" id="waveEN"><div class="wb en"></div><div class="wb en"></div><div class="wb en"></div><div class="wb en"></div><div class="wb en"></div><span class="wave-lbl" style="color:#e24b4a">Recording...</span></div>
+        <div class="transcript-area" id="transcriptArea"></div>
+        <textarea class="type-input" id="typeInput" placeholder="Type your English rendering here..."></textarea>
+        <div class="btn-row">
+          <button id="btnPlay" class="btn-primary">&#9654; Play</button>
+          <button id="btnRepeat" disabled>&#8635; Repeat</button>
+          
+        </div>
+        <div class="btn-row">
+          <button id="btnRecord" disabled>&#127908; Record</button>
+          <button id="btnStop" disabled class="btn-rec">&#9632; Stop</button>
+          <button id="btnType" disabled>&#9998; Type</button>
+          <button id="btnSubmitType" disabled class="btn-green">&#10003; Submit</button>
+        </div>
+        <div class="btn-row">
+          <button id="btnNext" disabled class="btn-primary">Next &#8250;</button>
+          <button id="btnSkip" disabled>Skip</button>
+        </div>
+        <div class="score-section" id="scoreSection">
+          <div class="score-row"><span class="score-big" id="scoreNum">—</span><span class="score-ten">/10</span><span class="score-comment" id="scoreComment"></span></div>
+          <div id="feedbackList"></div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /practiceArea -->
+    <div class="session-bar" id="sessionBar"></div>
+  </div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div id="adminScreen" class="hidden">
+  <div class="admin-screen">
+    <div class="admin-header">
+      <div class="admin-title">Admin — Results Dashboard</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="nav-btn" id="adminNavResults" onclick="switchAdminView('results')">Trainees</button>
+        <button class="nav-btn" id="adminNavTopics" onclick="switchAdminView('topics')">Custom topics</button>
+        <button class="nav-btn" onclick="exportCSV()">&#8595; Export CSV</button>
+        <button class="nav-btn" onclick="showLogin()">Sign out</button>
+      </div>
+    </div>
+
+    <!-- TRAINEE SELECT -->
+    <div id="traineeSelectView">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">Select a trainee to view results</div>
+          <button class="clear-btn" onclick="clearResults()">Clear all data</button>
+        </div>
+        <div id="traineeGrid" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+      </div>
+    </div>
+
+    <!-- TRAINEE DETAIL -->
+    <div id="traineeDetailView" class="hidden">
+      <div class="stats-row" id="traineeStatsRow"></div>
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="back-btn" onclick="backToTrainees()">&#8592; All trainees</button>
+            <div class="admin-card-title" id="traineeDetailTitle"></div>
+          </div>
+          <button class="clear-btn" onclick="clearTraineeResults()">Clear this trainee</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Scenario</th><th>Sentence</th><th>Score</th><th>Their rendering</th><th>Model rendering</th><th>Date / Time</th></tr></thead>
+            <tbody id="traineeResultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOM TOPICS VIEW -->
+    <div id="topicSection" class="hidden" style="margin-top:0">
+      <div class="topic-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px">
+          <div>
+            <label class="topic-label">Topic name</label>
+            <div class="topic-hint">e.g. "Q3 Budget Review"</div>
+            <input type="text" class="topic-input" id="topicName" placeholder="Enter topic name">
+          </div>
+          <div>
+            <label class="topic-label">Speaker name</label>
+            <div class="topic-hint">e.g. "Tanaka-san"</div>
+            <input type="text" class="topic-input" id="topicSpeaker" placeholder="Enter speaker name">
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="topic-label">Direction</label>
+          <div class="topic-hint">Which language will the speaker use?</div>
+          <div style="display:flex;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:7px 12px;border:1px solid #d3d1c7;border-radius:7px;background:#fff;flex:1">
+              <input type="radio" name="topicLang" value="ja" id="langJA" checked onchange="updateTopicPlaceholder()"> Japanese → English
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:7px 12px;border:1px solid #d3d1c7;border-radius:7px;background:#fff;flex:1">
+              <input type="radio" name="topicLang" value="en" id="langEN" onchange="updateTopicPlaceholder()"> English → Japanese
+            </label>
+          </div>
+        </div>
+        <label class="topic-label" id="scriptLabel">Script</label>
+        <div class="topic-hint" id="scriptHint">Paste the full Japanese text. Splits automatically at 。marks.</div>
+        <textarea class="topic-script" id="topicScript" placeholder="例：本日はお時間をいただきありがとうございます。先週の会議についてご確認いただきたい点がございます。" oninput="previewTopic()"></textarea>
+
+
+        <div class="topic-preview" id="topicPreview">
+          <div class="topic-preview-title">Preview — sentences detected</div>
+          <div id="topicPreviewList"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-primary" onclick="saveTopic()" style="font-size:13px;padding:8px 16px">Save topic</button>
+          <button onclick="clearTopicForm()" style="font-size:13px;padding:8px 16px">Clear</button>
+        </div>
+        <div id="topicSaveMsg" style="font-size:12px;color:#166534;margin-top:8px;display:none">&#10003; Topic saved!</div>
+      </div>
+      <div class="admin-card" style="margin-top:12px">
+        <div class="admin-card-header"><div class="admin-card-title">Saved custom topics</div></div>
+        <div id="savedTopicsList" style="padding:0"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = 'Trainer2026';
+const builtinTopics = [
+  {id:677282,name:"IT System Terms \u2014 JP\u2192EN",speaker:"Tanaka-san",lang:"ja",meeting:"IT Vocabulary Drill",sentences:["プッシュ配信", "変数", "メールアーカイブ", "アカウントの復元", "帯域制御", "サイドメニュー", "改修版", "リターン処理状態", "構築", "挿入する", "子JAN", "取り込み"],models:["Push distribution", "Variable", "Mail archive", "Restore your account", "Bandwidth control", "Side menu", "Modified version", "Return processing state", "Build · Setup", "To insert", "Child JAN", "Import"],created:"2026-07-02",builtin:true},
+  {id:706066,name:"IT System Terms \u2014 EN\u2192JP",speaker:"Tanaka-san",lang:"en",meeting:"IT Vocabulary Drill",sentences:["File modification", "Security assessment", "AWS cost", "Tag manager", "Batch", "Pseudo prod", "Programming language", "Return processing state", "Cache server", "Session", "Branch creation", "Module"],models:["ファイル変更 (fairu henkoo)", "セキュリティ診断 (sekyuriti shindan)", "AWSコスト (AWS kosuto)", "タグマネージャー (tagu maneejaa)", "バッチ (bacchi)", "疑似本整 (giji hon sei)", "プログラミング言語 (puroguramingu gengo)", "リターン処理状態 (ritaan shori jootai)", "キャッシュサーバ (kyasshu saaba)", "セッション (sesshon)", "ブランチ作成 (buranchi sakusei)", "モジュール (mojuuru)"],created:"2026-07-02",builtin:true},
+  {id:944484,name:"Business Process \u2014 JP\u2192EN",speaker:"Yamamoto-san",lang:"ja",meeting:"Business Vocabulary Drill",sentences:["認識", "固定", "応答確認", "ユースケース", "しょるい", "作業依頼数", "利用方法", "プリーツ", "てんぽ", "見積書", "最近チェックした商品", "フェーズ"],models:["Awareness · Recognition", "Fixed", "Confirmation", "Use case", "Documents", "Number of work requests", "Usage method", "Pleats", "Store", "Estimation document", "Recently checked products", "Phase"],created:"2026-07-02",builtin:true},
+  {id:115164,name:"Business Process \u2014 EN\u2192JP",speaker:"Yamamoto-san",lang:"en",meeting:"Business Vocabulary Drill",sentences:["Over-the-counter · At the store", "Your own", "Discussion", "Homepage", "Call center", "Register", "Regular meeting", "Article front", "Apology", "Success rate", "Precautions", "Submit·post review"],models:["店頭 (てんとう)", "ご自身の (ごじしんの)", "ぎろん (giron)", "ホームページ (hoomu peeji)", "コールセンター (kooru sentaa)", "お申し込み (おもうしこみ)", "定例会 (ていれいかい)", "読み物フロント (yomimono furonto)", "お詫び (おわび)", "成功率 (せいこうりつ)", "注意事項 (ちゅういじこう)", "レビュー投稿 (rebyuu tookoo)"],created:"2026-07-02",builtin:true},
+  {id:617882,name:"Issues & Bugs \u2014 JP\u2192EN",speaker:"Suzuki-san",lang:"ja",meeting:"Issue Vocabulary Drill",sentences:["バグ", "失敗", "えいきょう", "いじょう", "バグ修正", "影響", "緊急", "解消", "失敗原因", "修正"],models:["Error · Bug", "Failure", "Impact", "Abnormality", "Error fix", "Impact", "Urgent · Emergency", "Resolution · Issue resolved", "Cause of failure", "Fix · Correction"],created:"2026-07-02",builtin:true},
+  {id:151755,name:"Status Terms \u2014 JP\u2192EN",speaker:"Nakamura-san",lang:"ja",meeting:"Status Vocabulary Drill",sentences:["反映済み", "進行中", "開発済み", "保留中", "作成済み", "導入を検討中", "公開中", "未処理"],models:["Already reflected·applied", "In progress", "Developed", "On hold", "Already prepared", "Under consideration for implementation", "Open · Currently published", "Unprocessed"],created:"2026-07-02",builtin:true},
+  {id:500865,name:"Approval Terms \u2014 JP\u2192EN",speaker:"Tanaka-san",lang:"ja",meeting:"Approval Vocabulary Drill",sentences:["承認依頼", "承認待ち", "承認者", "承認", "承認済み"],models:["Request for approval", "Awaiting approval", "Approver", "Approval", "Approved"],created:"2026-07-02",builtin:true},
+  {id:387779,name:"Mixed MUJI Vocab \u2014 JP\u2192EN",speaker:"Tanaka-san",lang:"ja",meeting:"MUJI Mixed Vocabulary",sentences:["期末在庫", "残高照会", "各国特有のバッチ", "お届け時間帯", "更新履歴", "文字タイプ", "コールセンター", "実際に", "キャッシュサーバ", "経度", "AWSコスト", "新規", "イベント予約", "踏み台サーバー", "みちゃく"],models:["Last remaining stocks", "Balance inquiry", "Country-specific batch", "Delivery time range", "Update history", "Character type", "Call center", "Actually", "Cache server", "Longitude", "AWS cost", "New item", "Event reservation", "Bastion server", "Not yet arrived"],created:"2026-07-02",builtin:true},
+  {id:259286,name:"Mixed MUJI Vocab \u2014 EN\u2192JP",speaker:"Tanaka-san",lang:"en",meeting:"MUJI Mixed Vocabulary",sentences:["Authentication", "E-mail", "SAP sending verification", "Mail archive", "Confirmation items", "Integrated service management", "Array (programming)", "Member guide", "Product department", "Wireless LAN", "To save", "Visualization", "Operation is normal", "Secondary menu", "Area"],models:["認証 (にんしょう)", "電子メール (でんしメール)", "SAP配信結果確認 (SAP haishinkekkakakunin)", "メールアーカイブ (meeru aakaibuu)", "確認箇所 (かくにんかしょ)", "統合サービス管理 (toogoo saabisu kanri)", "配列 (はいれつ)", "会員案内 (かいいんあんない)", "商品部 (しょうひんぶ)", "無線LAN (むせんLAN)", "保存する (ほぞんする)", "可視化 (かしか)", "動作が正常 (どうさがせいじょう)", "セカンダリメニュー (sekandari menyuu)", "領域 (りょういき)"],created:"2026-07-02",builtin:true}
+];
+
+const STORAGE_KEY = 'jp_practice_results';
+
+const scenarios=[
+  {label:"IT · deployment",domain:"IT project",diff:"★★★",diffClass:"b-hard",speaker:"Tanaka-san",role:"Project Manager",initials:"TK",meeting:"IT Deployment Review",
+   sentences:[
+    {jp:"本日はお時間をいただきありがとうございます。",tip:"Opening — formal. 'Thank you for your time today.'",model:"Thank you for taking the time to meet with us today."},
+    {jp:"先週ご共有した本番環境への展開スケジュールについてですが、いくつか調整が必要になりました。",tip:"本番環境 = production environment, 展開 = deployment.",model:"Regarding the production environment deployment schedule shared last week, some adjustments have become necessary."},
+    {jp:"現在、検証環境での不具合対応が完了しておらず、暫定対応のみの状態となっております。",tip:"検証環境 = staging, 不具合 = defect, 暫定対応 = temporary fix.",model:"Currently, defect resolution in the staging environment is not complete, and we are in a temporary fix state only."},
+    {jp:"恒久対応につきましては、来週末を目処に完了させる方向で進めております。",tip:"恒久対応 = permanent fix. ～を目処に = aiming for / by.",model:"We are working toward completing the permanent fix by the end of next week."},
+    {jp:"切り戻しの手順についても、念のため再度ご確認をお願いできればと思います。",tip:"切り戻し = rollback. Preserve the hedge.",model:"We would also appreciate reconfirmation of the rollback procedure, just to be safe."},
+    {jp:"以上、よろしくお願いいたします。",tip:"Standard closing.",model:"That is all. Thank you for your continued support."}
+   ],terms:[["production environment","本番環境"],["deployment","展開"],["staging","検証環境"],["defect","不具合"],["temporary fix","暫定対応"],["permanent fix","恒久対応"],["rollback","切り戻し"]]},
+  {label:"Business · status",domain:"Business review",diff:"★★☆",diffClass:"b-med",speaker:"Yamamoto-san",role:"Business Lead",initials:"YM",meeting:"Monthly Status Review",
+   sentences:[
+    {jp:"今月の進捗についてご報告いたします。",tip:"Simple opening.",model:"I will now provide a progress report for this month."},
+    {jp:"全体的には計画通りに進んでおりますが、いくつか課題が残っております。",tip:"課題 = issue.",model:"Overall we are on track, however several issues remain."},
+    {jp:"影響範囲の確認が完了しておらず、来週中に結果をご共有できる予定です。",tip:"影響範囲 = scope of impact.",model:"The scope of impact assessment is not yet complete, and we plan to share results by next week."},
+    {jp:"また、エスカレーションが必要な案件が一件ございまして、担当者と調整中でございます。",tip:"エスカレーション = escalation, 担当者 = person in charge.",model:"Additionally, there is one matter requiring escalation, and we are coordinating with the person in charge."},
+    {jp:"引き続きよろしくお願いいたします。",tip:"Closing.",model:"We appreciate your continued support."}
+   ],terms:[["issue","課題"],["scope of impact","影響範囲"],["escalation","エスカレーション"],["person in charge","担当者"]]},
+  {label:"Client · vendor",domain:"Client-facing",diff:"★★★",diffClass:"b-hard",speaker:"Suzuki-san",role:"Client Representative",initials:"SZ",meeting:"Vendor Proposal Review",
+   sentences:[
+    {jp:"この度はご提案の機会をいただきまして、誠にありがとうございます。",tip:"Very formal. 誠に = sincerely.",model:"Thank you very much for the opportunity to present your proposal."},
+    {jp:"弊社といたしましては、今回ご提示いただいた仕様について、社内で検討させていただきました。",tip:"弊社 = our company. 仕様 = specifications.",model:"Our company has conducted an internal review of the specifications you presented."},
+    {jp:"基本的な方向性については賛同できると考えております。",tip:"Hedged agreement — preserve 基本的な.",model:"We believe we are able to agree with the general direction."},
+    {jp:"ただし、いくつかの点につきまして、追加でご確認いただけますでしょうか。",tip:"ただし = however. Very formal request.",model:"However, we would kindly request further clarification on a few points."},
+    {jp:"詳細につきましては、別途資料をお送りいたしますので、ご査収ください。",tip:"ご査収ください = please review and retain.",model:"We will send a separate document — please review and retain it for your records."}
+   ],terms:[["specifications","仕様"],["please review and retain","ご査収"]]},
+  {label:"Training · handover",domain:"Knowledge transfer",diff:"★★☆",diffClass:"b-med",speaker:"Nakamura-san",role:"Senior Trainer",initials:"NK",meeting:"Knowledge Transfer Session",
+   sentences:[
+    {jp:"では、本日のナレッジ移転セッションを始めさせていただきます。",tip:"ナレッジ移転 = knowledge transfer.",model:"We will now begin today's knowledge transfer session."},
+    {jp:"まず、作業手順書の構成についてご説明いたします。",tip:"作業手順書 = procedure manual.",model:"First, I will explain the structure of the procedure manual."},
+    {jp:"各手順は順番通りに実施していただく必要がございます。",tip:"Each step in order.",model:"Each step must be carried out in the specified order."},
+    {jp:"不明な点がございましたら、いつでもご質問ください。",tip:"Simple — please ask questions anytime.",model:"Please feel free to ask questions at any time."},
+    {jp:"また、引き継ぎに関する資料は、セッション終了後にお送りいたします。",tip:"引き継ぎ = handover.",model:"The handover documentation will be sent after the session concludes."}
+   ],terms:[["knowledge transfer","ナレッジ移転"],["procedure manual","作業手順書"],["handover","引き継ぎ"]]}
+];
+
+let cur=0,sentIdx=0,spokenText='',recognition=null,totalScore=0,scoredCount=0;
+let currentUser='';
+
+/* ---------- STORAGE ---------- */
+let _useServer = false;
+
+async function checkServer(){
+  try{
+    const r = await fetch('/api/ping', {signal: AbortSignal.timeout(1500)});
+    if(r.ok){
+      _useServer=true;
+      const badge=document.getElementById('serverBadge');
+      if(badge)badge.style.display='inline-block';
+    }
+  }catch(e){ _useServer=false; }
+}
+
+function loadResults(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){return[];}
+}
+
+async function loadResultsFromServer(){
+  try{
+    const r = await fetch('/api/results');
+    if(r.ok) return await r.json();
+  }catch(e){}
+  return loadResults();
+}
+
+function saveResult(rec){
+  // Always save to localStorage as backup
+  const data = loadResults();
+  data.push(rec);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  // Also save to server if available
+  if(_useServer){
+    fetch('/api/results',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(rec)
+    }).catch(()=>{});
+  }
+}
+
+function clearResults(){
+  if(!confirm('Clear all results? This cannot be undone.'))return;
+  localStorage.removeItem(STORAGE_KEY);
+  if(_useServer){
+    fetch('/api/results/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});
+  }
+  renderAdmin();
+}
+
+function clearTraineeFromServer(name){
+  if(_useServer){
+    fetch('/api/results/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})}).catch(()=>{});
+  }
+}
+
+/* ---------- AUTH ---------- */
+function showLogin(){
+  hide('loginScreen',false);hide('adminLoginScreen',true);hide('practiceScreen',true);hide('adminScreen',true);
+  document.getElementById('loginName').value='';document.getElementById('loginErr').style.display='none';
+}
+function showAdminLogin(){
+  hide('loginScreen',true);hide('adminLoginScreen',false);hide('practiceScreen',true);hide('adminScreen',true);
+  document.getElementById('adminPwd').value='';document.getElementById('adminErr').style.display='none';
+}
+function hide(id,val){document.getElementById(id).classList.toggle('hidden',val);}
+
+function doLogin(){
+  const v=document.getElementById('loginName').value.trim().toLowerCase();
+  const valid=/^[a-z]+\.[a-z]+$/.test(v);
+  document.getElementById('loginErr').style.display=valid?'none':'block';
+  if(!valid)return;
+  currentUser=v;
+  hide('loginScreen',true);hide('practiceScreen',false);
+  document.getElementById('navUser').textContent=currentUser;
+  checkServer().then(()=>buildTabs());
+}
+
+function doAdminLogin(){
+  const pwd=document.getElementById('adminPwd').value;
+  if(pwd===ADMIN_PASSWORD){
+    hide('adminLoginScreen',true);hide('adminScreen',false);
+    renderAdmin();
+  } else {
+    document.getElementById('adminErr').style.display='block';
+  }
+}
+
+function doLogout(){currentUser='';hide('practiceScreen',true);showLogin();}
+
+document.getElementById('loginName').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+/* ---------- ADMIN RENDER ---------- */
+let selectedTrainee = null;
+
+function renderAdmin(){
+  if(_useServer){ renderAdminAsync(); return; }
+  renderAdminWithData(loadResults());
+}
+
+function renderAdminWithData(results){
+  selectedTrainee=null;
+  hide('traineeSelectView',false);
+  hide('traineeDetailView',true);
+  const scored=results.filter(r=>r.score!==null);
+  const users=[...new Set(results.map(r=>r.name))];
+  const avg=scored.length?Math.round(scored.reduce((a,b)=>a+b.score,0)/scored.length):0;
+  const stats=document.getElementById('statsRow');
+  stats.innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total entries</div><div class="stat-val">${results.length}</div><div class="stat-sub">sentences recorded</div></div>
+    <div class="stat-card"><div class="stat-label">Overall average</div><div class="stat-val">${scored.length?avg+'/10':'—'}</div><div class="stat-sub">across all trainees</div></div>
+    <div class="stat-card"><div class="stat-label">Trainees</div><div class="stat-val">${users.length}</div><div class="stat-sub">${users.length?'active':'none yet'}</div></div>
+    <div class="stat-card"><div class="stat-label">Top score</div><div class="stat-val">${scored.length?Math.max(...scored.map(r=>r.score))+'/10':'—'}</div><div class="stat-sub">best single sentence</div></div>`;
+  renderTraineeGrid(users, results);
+}
+
+function renderTraineeGrid(users, results){
+  const grid=document.getElementById('traineeGrid');
+  if(!users.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">No results yet. Trainees will appear here after their first session.</div>';return;}
+  grid.innerHTML='';
+  users.forEach(name=>{
+    const userResults=results.filter(r=>r.name===name);
+    const scored=userResults.filter(r=>r.score!==null);
+    const avg=scored.length?Math.round(scored.reduce((a,b)=>a+b.score,0)/scored.length):null;
+    const cls=avg===null?'s-skip':avg>=8?'s-high':avg>=5?'s-mid':'s-low';
+    const initials=name.split('.').map(p=>p[0].toUpperCase()).join('');
+    const lastActive=userResults[userResults.length-1]?.datetime||'—';
+    const card=document.createElement('div');
+    card.className='trainee-card';
+    card.onclick=()=>openTrainee(name);
+    card.innerHTML=`
+      <div class="trainee-initials">${initials}</div>
+      <div class="trainee-name">${name}</div>
+      <div class="trainee-meta">${userResults.length} sentences · Last: ${lastActive.split(',')[0]}</div>
+      <span class="score-pill trainee-score-badge ${cls}">${avg!==null?'Avg '+avg+'/10':'No scores yet'}</span>
+      <div class="progress-ring"><div class="ring-bar"><div class="ring-fill" style="width:${avg!==null?avg*10:0}%"></div></div></div>`;
+    grid.appendChild(card);
+  });
+}
+
+async function openTrainee(name){
+  selectedTrainee=name;
+  hide('traineeSelectView',true);
+  hide('traineeDetailView',false);
+  document.getElementById('traineeDetailTitle').textContent=name;
+  const allResults = _useServer ? await loadResultsFromServer() : loadResults();
+  const results=allResults.filter(r=>r.name===name);
+  const scored=results.filter(r=>r.score!==null);
+  const avg=scored.length?Math.round(scored.reduce((a,b)=>a+b.score,0)/scored.length):null;
+  const best=scored.length?Math.max(...scored.map(r=>r.score)):null;
+  const scenarios=[...new Set(results.map(r=>r.scenario))];
+  document.getElementById('traineeStatsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Sentences</div><div class="stat-val">${results.length}</div><div class="stat-sub">total attempts</div></div>
+    <div class="stat-card"><div class="stat-label">Average score</div><div class="stat-val">${avg!==null?avg+'/10':'—'}</div><div class="stat-sub">scored sentences</div></div>
+    <div class="stat-card"><div class="stat-label">Best score</div><div class="stat-val">${best!==null?best+'/10':'—'}</div><div class="stat-sub">single sentence</div></div>
+    <div class="stat-card"><div class="stat-label">Scenarios tried</div><div class="stat-val">${scenarios.length}</div><div class="stat-sub">${scenarios.map(s=>s.split('·')[0].trim()).join(', ')}</div></div>`;
+  const tbody=document.getElementById('traineeResultsBody');
+  tbody.innerHTML='';
+  results.slice().reverse().forEach(r=>{
+    const sc=r.score;
+    const cls=sc===null?'s-skip':sc>=8?'s-high':sc>=5?'s-mid':'s-low';
+    const label=sc===null?'Skip':sc+'/10';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.scenario}</td><td style="max-width:180px;word-break:break-word">${r.sentence}</td><td><span class="score-pill ${cls}">${label}</span></td><td style="max-width:180px;word-break:break-word;font-style:italic;color:#5f5e5a">${r.rendering||'—'}</td><td style="max-width:180px;word-break:break-word;color:#92400e">${r.model}</td><td style="white-space:nowrap;color:#888780">${r.datetime}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function backToTrainees(){
+  selectedTrainee=null;
+  hide('traineeSelectView',false);
+  hide('traineeDetailView',true);
+}
+
+function clearTraineeResults(){
+  if(!confirm('Clear all results for '+selectedTrainee+'?'))return;
+  const remaining=loadResults().filter(r=>r.name!==selectedTrainee);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(remaining));
+  clearTraineeFromServer(selectedTrainee);
+  backToTrainees();renderAdmin();
+}
+
+async function exportCSV(){
+  const results = _useServer ? await loadResultsFromServer() : loadResults();
+  if(!results.length){alert('No results to export.');return;}
+  const rows=[['Name','Scenario','Sentence','Score','Their rendering','Model rendering','Date/Time']];
+  results.forEach(r=>rows.push([r.name,r.scenario,'"'+r.sentence+'"',r.score===null?'Skip':r.score,'"'+(r.rendering||'')+'"','"'+r.model+'"',r.datetime]));
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='jp_practice_results_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+/* ---------- PRACTICE ---------- */
+function buildTabs(){
+  const nav=document.getElementById('scenarioTabs');nav.innerHTML='';
+  scenarios.forEach((s,i)=>{const b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=s.label;b.onclick=()=>loadScenario(i);nav.appendChild(b);});
+}
+
+function loadScenario(idx){
+  cur=idx;sentIdx=0;spokenText='';totalScore=0;scoredCount=0;
+  const s=scenarios[idx];
+  document.getElementById('meetingSub').textContent=s.meeting;
+  document.getElementById('avatarEl').textContent=s.initials;
+  document.getElementById('spkName').textContent=s.speaker;
+  document.getElementById('spkRole').textContent=s.role;
+  document.getElementById('bdgDomain').textContent=s.domain;
+  document.getElementById('bdgDomain').className='badge b-domain';
+  document.getElementById('bdgDiff').textContent=s.diff;
+  document.getElementById('bdgDiff').className='badge '+s.diffClass;
+  document.getElementById('sessionBar').textContent='';
+  buildConversation();setStep(1);updateProgress();
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+}
+
+function buildConversation(){
+  const c=document.getElementById('conversation');c.innerHTML='';
+  scenarios[cur].sentences.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='msg'+(i===0?' active':'');d.id='msg-'+i;
+    d.innerHTML=`<div class="msg-av">${scenarios[cur].initials}</div>
+      <div class="msg-inner">
+        <div class="msg-bubble${i===0?' active-bubble':''}" id="bubble-${i}">
+          <div class="msg-lbl">${scenarios[cur].speaker}</div>
+          <div class="msg-jp blurred" id="jp-${i}">${s.jp}</div>
+        </div>
+        <div class="your-bubble" id="your-${i}"></div>
+        <div class="model-bubble" id="model-${i}"><div class="model-lbl">Model rendering</div><span id="modeltext-${i}"></span></div>
+      </div>`;
+    c.appendChild(d);
+  });
+}
+
+function updateProgress(){
+  document.getElementById('progressFill').style.width=Math.round((sentIdx/scenarios[cur].sentences.length)*100)+'%';
+}
+
+function setStep(n){
+  document.querySelectorAll('.sp').forEach((p,i)=>{p.className='sp'+(i+1===n?' active-sp':sentIdx>i?' done-sp':'');});
+  document.getElementById('tipBox').style.display='none';
+  document.getElementById('waveJP').style.display='none';
+  document.getElementById('waveEN').style.display='none';
+  document.getElementById('transcriptArea').style.display='none';
+  document.getElementById('typeInput').style.display='none';
+  document.getElementById('typeInput').value='';
+  document.getElementById('scoreSection').style.display='none';
+  const il=n===1,ir=n===2,in2=n===3;
+  document.getElementById('btnPlay').disabled=!il;
+  document.getElementById('btnRepeat').disabled=!(il&&sentIdx>0);
+  
+  document.getElementById('btnRecord').disabled=!ir;
+  document.getElementById('btnStop').disabled=true;
+  document.getElementById('btnType').disabled=!ir;
+  document.getElementById('btnSubmitType').disabled=true;
+  document.getElementById('btnNext').disabled=!in2;
+  document.getElementById('btnSkip').disabled=in2;
+  if(il){document.getElementById('btnPlay').disabled=false;document.getElementById('btnSkip').disabled=false;}
+}
+
+function speakLang(text,lang,onEnd){
+  if(!window.speechSynthesis){onEnd&&onEnd();return;}
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=lang;u.rate=1.0;
+  const voices=window.speechSynthesis.getVoices();
+  const v=voices.find(vv=>vv.lang===lang)||voices.find(vv=>vv.lang.startsWith(lang.split('-')[0]));
+  if(v)u.voice=v;
+  u.onend=()=>{onEnd&&onEnd();};
+  window.speechSynthesis.speak(u);
+}
+
+function speak(text,onEnd){
+  speakLang(text,'ja-JP',onEnd);
+}
+
+function startRec(){
+  const ta=document.getElementById('transcriptArea');ta.style.display='block';ta.textContent='(listening...)';
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ta.textContent='Not supported. Use the Type option instead.';return;}
+  recognition=new SR();const recLang=(window._customTopic&&window._customTopic.lang==='en')?'ja-JP':'en-US';
+  recognition.lang=recLang;recognition.continuous=true;recognition.interimResults=true;
+  let final='';
+  recognition.onresult=(e)=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal)final+=e.results[i][0].transcript+' ';
+      else interim+=e.results[i][0].transcript;
+    }
+    ta.textContent=(final+interim).trim()||'(listening...)';spokenText=final.trim();
+  };
+  recognition.onerror=(e)=>{ta.textContent='Mic blocked — use the Type option.';};
+  recognition.onend=()=>{if(spokenText)revealAndScore();};
+  try{recognition.start();}catch(e){ta.textContent='Could not start. Use the Type option.';}
+}
+
+function revealAndScore(){
+  document.getElementById('waveEN').style.display='none';
+  document.getElementById('btnStop').disabled=true;
+  document.getElementById('btnRecord').disabled=false;
+  const isCustom=cur===-1&&window._customTopic;
+  const s=isCustom?null:scenarios[cur];
+  const sent=isCustom?null:(s?s.sentences[sentIdx]:null);
+  const u=(spokenText||'').toLowerCase();
+  let sc=5;const hits=[],misses=[];
+  if(!isCustom&&s&&s.terms){
+    s.terms.forEach(([en,jp])=>{
+      if(sent&&sent.jp&&sent.jp.includes(jp)){
+        if(u.includes(en.toLowerCase().split(' ')[0])){hits.push(en);sc+=0.8;}
+        else{misses.push(en+' ('+jp+')');sc-=0.5;}
+      }
+    });
+  }
+  if(spokenText.trim().split(/\s+/).length>8)sc+=1;
+  sc=Math.min(10,Math.max(1,Math.round(sc)));
+  if(spokenText){totalScore+=sc;scoredCount++;}
+  const comments={10:"Flawless",9:"Near-perfect",8:"Strong",7:"Good",6:"Acceptable",5:"Developing",4:"Needs work",3:"Keep practicing",2:"Review model",1:"Try again"};
+  if(spokenText){const yb=document.getElementById('your-'+sentIdx);yb.textContent='"'+spokenText+'"';yb.classList.add('show');}
+  const modelText = (cur===-1&&window._customTopic&&window._customTopic.models)?window._customTopic.models[sentIdx]:(sent?sent.model:'');
+  document.getElementById('modeltext-'+sentIdx).textContent=modelText;
+  document.getElementById('model-'+sentIdx).classList.add('show');
+  document.getElementById('jp-'+sentIdx).classList.remove('blurred');
+  document.getElementById('scoreSection').style.display='block';
+  document.getElementById('scoreNum').textContent=spokenText?sc:'—';
+  document.getElementById('scoreComment').textContent=spokenText?(comments[sc]||''):'Skipped';
+  const fl=document.getElementById('feedbackList');fl.innerHTML='';
+  hits.forEach(h=>{const d=document.createElement('div');d.className='fb-item hit';d.textContent='✓ '+h;fl.appendChild(d);});
+  misses.forEach(m=>{const d=document.createElement('div');d.className='fb-item miss';d.textContent='△ '+m;fl.appendChild(d);});
+  const scenarioLabel=isCustom?window._customTopic.name:scenarios[cur].label;
+  const sentenceText=isCustom?window._customTopic.sentences[sentIdx]:(sent?sent.jp:'');
+  const modelText2=(isCustom&&window._customTopic.models)?window._customTopic.models[sentIdx]:(sent?sent.model:'');
+  saveResult({
+    name:currentUser,
+    scenario:scenarioLabel,
+    sentence:sentenceText,
+    score:spokenText?sc:null,
+    rendering:spokenText||'',
+    model:modelText2,
+    datetime:new Date().toLocaleString('en-PH',{timeZone:'Asia/Manila',hour12:false})
+  });
+  setStep(3);
+}
+
+document.getElementById('btnPlay').onclick=function(){
+  document.getElementById('waveJP').style.display='flex';
+  this.disabled=true;document.getElementById('btnRepeat').disabled=true;
+  if(cur===-1&&window._customTopic){
+    const topic=window._customTopic;
+    const sentence=topic.sentences[sentIdx];
+    const isEN=topic.lang==='en';
+    document.getElementById('tipBox').style.display='none';
+    speakLang(sentence,isEN?'en-US':'ja-JP',()=>{
+      document.getElementById('waveJP').style.display='none';
+      document.getElementById('btnRepeat').disabled=false;setStep(2);
+    });
+  } else {
+    const sent=scenarios[cur].sentences[sentIdx];
+    document.getElementById('tipBox').style.display='block';
+    document.getElementById('tipBox').textContent=sent.tip;
+    speak(sent.jp,()=>{
+      document.getElementById('waveJP').style.display='none';
+      document.getElementById('btnRepeat').disabled=false;setStep(2);
+    });
+  }
+};
+
+document.getElementById('btnRepeat').onclick=function(){
+  document.getElementById('waveJP').style.display='flex';this.disabled=true;document.getElementById('btnPlay').disabled=true;
+  if(cur===-1&&window._customTopic){
+    const topic=window._customTopic;
+    speakLang(topic.sentences[sentIdx],topic.lang==='en'?'en-US':'ja-JP',()=>{
+      document.getElementById('waveJP').style.display='none';this.disabled=false;document.getElementById('btnPlay').disabled=false;
+    });
+  } else {
+    speak(scenarios[cur].sentences[sentIdx].jp,()=>{document.getElementById('waveJP').style.display='none';this.disabled=false;document.getElementById('btnPlay').disabled=false;});
+  }
+};
+
+
+
+document.getElementById('btnRecord').onclick=function(){
+  spokenText='';document.getElementById('waveEN').style.display='flex';
+  document.getElementById('btnStop').disabled=false;this.disabled=true;startRec();
+};
+
+document.getElementById('btnStop').onclick=function(){
+  if(recognition)try{recognition.stop()}catch(e){}
+  document.getElementById('waveEN').style.display='none';this.disabled=true;document.getElementById('btnRecord').disabled=false;
+  if(spokenText)revealAndScore();
+  else document.getElementById('transcriptArea').textContent='Nothing captured. Try again or use Type.';
+};
+
+document.getElementById('btnType').onclick=function(){
+  document.getElementById('typeInput').style.display='block';document.getElementById('typeInput').focus();
+  document.getElementById('transcriptArea').style.display='none';
+  document.getElementById('btnRecord').disabled=true;document.getElementById('btnStop').disabled=true;
+};
+
+document.getElementById('typeInput').oninput=function(){
+  spokenText=this.value;document.getElementById('btnSubmitType').disabled=this.value.trim().length===0;
+};
+
+document.getElementById('btnSubmitType').onclick=function(){
+  spokenText=document.getElementById('typeInput').value;if(spokenText.trim())revealAndScore();
+};
+
+document.getElementById('btnSkip').onclick=function(){
+  if(recognition)try{recognition.stop()}catch(e){}spokenText='';revealAndScore();
+};
+
+document.getElementById('btnNext').onclick=function(){
+  document.getElementById('msg-'+sentIdx).classList.remove('active');
+  document.getElementById('msg-'+sentIdx).classList.add('done');
+  document.getElementById('bubble-'+sentIdx).classList.remove('active-bubble');
+  sentIdx++;
+  if(sentIdx>=scenarios[cur].sentences.length){endSession();return;}
+  document.getElementById('msg-'+sentIdx).classList.add('active');
+  document.getElementById('bubble-'+sentIdx).classList.add('active-bubble');
+  spokenText='';updateProgress();setStep(1);
+  document.getElementById('btnPlay').disabled=false;document.getElementById('btnSkip').disabled=false;
+  document.getElementById('msg-'+sentIdx).scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+
+function endSession(){
+  document.getElementById('progressFill').style.width='100%';
+  const avg=scoredCount>0?Math.round(totalScore/scoredCount):0;
+  document.getElementById('sessionBar').innerHTML='<strong>Session complete!</strong> '+scenarios[cur].sentences.length+' sentences &nbsp;|&nbsp; Average: '+(scoredCount>0?avg+'/10':'n/a')+' &nbsp;|&nbsp; <button onclick="startScenario(cur)" style="font-size:12px;padding:3px 10px">Try again</button> &nbsp;<button onclick="showTopicSelect()" style="font-size:12px;padding:3px 10px">&#8592; Choose another topic</button>';
+  setStep(3);document.getElementById('btnNext').disabled=true;
+}
+
+
+window.speechSynthesis&&window.speechSynthesis.addEventListener('voiceschanged',()=>{});
+
+/* ---------- CUSTOM TOPICS ---------- */
+const TOPICS_KEY='jp_practice_custom_topics';
+
+function loadTopics(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(TOPICS_KEY)||'[]');
+    return [...builtinTopics,...saved];
+  }catch(e){return builtinTopics.slice();}
+}
+function loadUserTopics(){
+  try{return JSON.parse(localStorage.getItem(TOPICS_KEY)||'[]');}catch(e){return[];}
+}
+function saveTopics(t){localStorage.setItem(TOPICS_KEY,JSON.stringify(t.filter(x=>!x.builtin)));}
+
+function splitSentences(text, lang){
+  if(lang==='en'){
+    return text.replace(/([.!?])\s+/g,'$1|').split('|').map(s=>s.trim()).filter(s=>s.length>3);
+  }
+  return text.replace(/。/g,'。|').split('|').map(s=>s.trim()).filter(s=>s.length>1);
+}
+
+function updateTopicPlaceholder(){
+  const lang=document.querySelector('input[name="topicLang"]:checked').value;
+  const isJA=lang==='ja';
+  document.getElementById('scriptLabel').textContent=isJA?'Japanese script':'English script';
+  document.getElementById('scriptHint').textContent=isJA?'Paste the full Japanese text. Splits automatically at 。marks.':'Paste the full English text. Splits automatically at sentence endings (. ! ?)';
+  document.getElementById('topicScript').placeholder=isJA?'例：本日はお時間をいただきありがとうございます。先週の会議についてご確認いただきたい点がございます。':'e.g. Thank you for joining today. I would like to discuss the deployment schedule. There are a few items that need your attention.';
+  document.getElementById('topicScript').value='';
+  document.getElementById('topicPreview').style.display='none';
+}
+
+function previewTopic(){
+  const text=document.getElementById('topicScript').value.trim();
+  const lang=document.querySelector('input[name="topicLang"]:checked').value;
+  const preview=document.getElementById('topicPreview');
+  const list=document.getElementById('topicPreviewList');
+  if(!text){preview.style.display='none';return;}
+  const sentences=splitSentences(text, lang);
+  if(!sentences.length){preview.style.display='none';return;}
+  preview.style.display='block';
+  list.innerHTML=sentences.map((s,i)=>`<div class="sentence-chip"><span class="chip-num">${i+1}</span><span>${s}</span></div>`).join('');
+}
+
+function saveTopic(){
+  const name=document.getElementById('topicName').value.trim();
+  const speaker=document.getElementById('topicSpeaker').value.trim()||'Speaker';
+  const script=document.getElementById('topicScript').value.trim();
+  const lang=document.querySelector('input[name="topicLang"]:checked').value;
+  if(!name){alert('Please enter a topic name.');return;}
+  if(!script){alert('Please paste a script.');return;}
+  const sentences=splitSentences(script, lang);
+  if(!sentences.length){
+    alert(lang==='ja'?'No sentences detected. Make sure the script contains 。':'No sentences detected. Make sure sentences end with . ! or ?');
+    return;
+  }
+  const topics=loadTopics();
+  topics.push({id:Date.now(),name,speaker,lang,sentences,created:new Date().toLocaleString('en-PH',{timeZone:'Asia/Manila',hour12:false})});
+  saveTopics(topics);
+  document.getElementById('topicSaveMsg').style.display='block';
+  setTimeout(()=>document.getElementById('topicSaveMsg').style.display='none',2000);
+  renderSavedTopics();
+  rebuildPracticeTabs();
+}
+
+function clearTopicForm(){
+  document.getElementById('topicName').value='';
+  document.getElementById('topicSpeaker').value='';
+  document.getElementById('topicScript').value='';
+  document.getElementById('topicPreview').style.display='none';
+}
+
+function deleteTopic(id){
+  if(!confirm('Delete this topic?'))return;
+  const topics=loadUserTopics().filter(t=>t.id!==id);
+  saveTopics(topics);renderSavedTopics();rebuildPracticeTabs();
+}
+
+function renderSavedTopics(){
+  const list=document.getElementById('savedTopicsList');
+  const userTopics=loadUserTopics();
+  let html='';
+  html+='<div style="padding:8px 14px;font-size:11px;color:#888780;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;background:#fafaf8;border-bottom:1px solid #f1efe8">Built-in MUJI vocabulary ('+builtinTopics.length+')</div>';
+  html+=builtinTopics.map(t=>`
+    <div class="saved-row">
+      <div class="saved-name">${t.name}</div>
+      <div class="saved-meta">${t.lang==='en'?'EN→JP':'JP→EN'} · ${t.sentences.length} terms · ${t.speaker}</div>
+      <span style="font-size:11px;color:#3b6d11;background:#eaf3de;padding:2px 8px;border-radius:10px">Built-in</span>
+    </div>`).join('');
+  if(userTopics.length){
+    html+='<div style="padding:8px 14px;font-size:11px;color:#888780;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;background:#fafaf8;border-bottom:1px solid #f1efe8;border-top:1px solid #f1efe8">Your custom topics ('+userTopics.length+')</div>';
+    html+=userTopics.map(t=>`
+      <div class="saved-row">
+        <div class="saved-name">${t.name}</div>
+        <div class="saved-meta">${t.lang==='en'?'EN→JP':'JP→EN'} · ${t.sentences.length} sentences · ${t.speaker} · ${t.created}</div>
+        <button class="saved-del" onclick="event.stopPropagation();deleteTopic(${t.id})">Delete</button>
+      </div>`).join('');
+  }
+  list.innerHTML=html;
+}
+
+function switchAdminView(view){
+  const isResults=view==='results';
+  document.getElementById('traineeSelectView').classList.toggle('hidden',!isResults);
+  document.getElementById('traineeDetailView').classList.add('hidden');
+  document.getElementById('topicSection').classList.toggle('hidden',isResults);
+  document.getElementById('adminNavResults').className='nav-btn'+(isResults?' active-nav':'');
+  document.getElementById('adminNavTopics').className='nav-btn'+(!isResults?' active-nav':'');
+  if(isResults)renderAdmin();
+  else renderSavedTopics();
+}
+
+function rebuildPracticeTabs(){
+  if(!document.getElementById('scenarioTabs'))return;
+  buildTabs();
+}
+
+/* Build topic selection screen */
+function buildTabs(){
+  buildTopicSelectScreen();
+}
+
+function buildTopicSelectScreen(){
+  const scenGrid=document.getElementById('builtinScenarioGrid');
+  const mujiGrid=document.getElementById('builtinMujiGrid');
+  const customGrid=document.getElementById('customTopicGrid');
+  const customWrap=document.getElementById('userTopicGroupWrap');
+  if(!scenGrid)return;
+
+  scenGrid.innerHTML='';
+  scenarios.forEach((s,i)=>{
+    const card=document.createElement('div');
+    card.className='topic-pick-card';
+    card.innerHTML=`<div class="topic-pick-name">${s.label}</div>
+      <div class="topic-pick-meta">
+        <span class="topic-pick-badge tpb-ja">JP→EN</span>
+        <span>${s.sentences.length} sentences</span>
+        <span>${s.diff}</span>
+      </div>`;
+    card.onclick=()=>startScenario(i);
+    scenGrid.appendChild(card);
+  });
+
+  mujiGrid.innerHTML='';
+  builtinTopics.forEach(t=>{
+    const card=document.createElement('div');
+    card.className='topic-pick-card';
+    card.innerHTML=`<div class="topic-pick-name">${t.name}</div>
+      <div class="topic-pick-meta">
+        <span class="topic-pick-badge ${t.lang==='en'?'tpb-en':'tpb-ja'}">${t.lang==='en'?'EN→JP':'JP→EN'}</span>
+        <span class="topic-pick-badge tpb-builtin">MUJI vocab</span>
+        <span>${t.sentences.length} terms</span>
+      </div>`;
+    card.onclick=()=>startCustomTopic(t);
+    mujiGrid.appendChild(card);
+  });
+
+  const userTopics=loadUserTopics();
+  if(userTopics.length){
+    customWrap.style.display='block';
+    customGrid.innerHTML='';
+    userTopics.forEach(t=>{
+      const card=document.createElement('div');
+      card.className='topic-pick-card';
+      card.innerHTML=`<div class="topic-pick-name">${t.name}</div>
+        <div class="topic-pick-meta">
+          <span class="topic-pick-badge ${t.lang==='en'?'tpb-en':'tpb-ja'}">${t.lang==='en'?'EN→JP':'JP→EN'}</span>
+          <span class="topic-pick-badge tpb-custom">Custom</span>
+          <span>${t.sentences.length} sentences</span>
+        </div>`;
+      card.onclick=()=>startCustomTopic(t);
+      customGrid.appendChild(card);
+    });
+  } else {
+    customWrap.style.display='none';
+  }
+}
+
+function showTopicSelect(){
+  document.getElementById('topicSelectScreen').classList.remove('hidden');
+  document.getElementById('practiceArea').classList.add('hidden');
+  document.getElementById('sessionBar').textContent='';
+  document.getElementById('btnChangeTopic').style.display='none';
+  if(window.speechSynthesis)window.speechSynthesis.cancel();
+}
+
+function showPracticeArea(){
+  document.getElementById('topicSelectScreen').classList.add('hidden');
+  document.getElementById('practiceArea').classList.remove('hidden');
+  document.getElementById('btnChangeTopic').style.display='inline-flex';
+}
+
+function startScenario(idx){
+  showPracticeArea();
+  loadScenario(idx);
+}
+
+function startCustomTopic(t){
+  showPracticeArea();
+  loadCustomTopic(t);
+}
+
+function loadCustomTopic(topic){
+  cur=-1;sentIdx=0;spokenText='';totalScore=0;scoredCount=0;
+  document.getElementById('meetingSub').textContent=topic.name;
+  document.getElementById('avatarEl').textContent=topic.speaker.slice(0,2).toUpperCase();
+  document.getElementById('spkName').textContent=topic.speaker;
+  document.getElementById('spkRole').textContent='Custom topic';
+  document.getElementById('bdgDomain').textContent='Custom';
+  document.getElementById('bdgDomain').className='badge b-domain';
+  document.getElementById('bdgDiff').textContent='';
+  document.getElementById('sessionBar').textContent='';
+
+  const isEN=topic.lang==='en';
+  document.getElementById('bdgDomain').textContent=isEN?'EN → JP':'JP → EN';
+  const c=document.getElementById('conversation');c.innerHTML='';
+  topic.sentences.forEach((sentence,i)=>{
+    const d=document.createElement('div');
+    d.className='msg'+(i===0?' active':'');d.id='msg-'+i;
+    d.innerHTML=`<div class="msg-av">${topic.speaker.slice(0,2).toUpperCase()}</div>
+      <div class="msg-inner">
+        <div class="msg-bubble${i===0?' active-bubble':''}" id="bubble-${i}">
+          <div class="msg-lbl">${topic.speaker}</div>
+          <div class="msg-jp blurred" id="jp-${i}">${sentence}</div>
+        </div>
+        <div class="your-bubble" id="your-${i}"></div>
+        <div class="model-bubble" id="model-${i}" style="display:none"><div class="model-lbl">Model rendering</div><span id="modeltext-${i}">${topic.models?topic.models[i]:sentence}</span></div>
+      </div>`;
+    c.appendChild(d);
+  });
+
+  window._customTopic=topic;
+  updateProgress();setStep(1);
+}
+
+/* Override doAdminLogin to also init admin view state */
+const _origDoAdminLogin=doAdminLogin;
+function doAdminLogin(){
+  const pwd=document.getElementById('adminPwd').value;
+  if(pwd===ADMIN_PASSWORD){
+    hide('adminLoginScreen',true);hide('adminScreen',false);
+    renderAdminAsync();
+    switchAdminView('results');
+  } else {
+    document.getElementById('adminErr').style.display='block';
+  }
+}
+
+async function renderAdminAsync(){
+  const results = _useServer ? await loadResultsFromServer() : loadResults();
+  renderAdminWithData(results);
+}
+</script>
+</body>
+</html>
