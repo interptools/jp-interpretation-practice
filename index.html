@@ -252,12 +252,10 @@ tr:hover td{background:#fafaf8}
             <div class="topic-select-sub">Select any topic below to begin your interpretation session</div>
           </div>
         </div>
-        <div class="topic-group-label">Built-in scenarios</div>
+        <div class="topic-group-label">JP → EN Interpretation</div>
         <div class="topic-grid" id="builtinScenarioGrid"></div>
-        <div class="topic-group-label">MUJI vocabulary drills</div>
-        <div class="topic-grid" id="builtinMujiGrid"></div>
         <div id="userTopicGroupWrap" style="display:none">
-          <div class="topic-group-label">Your custom topics</div>
+          <div class="topic-group-label">Custom topics</div>
           <div class="topic-grid" id="customTopicGrid"></div>
         </div>
       </div>
@@ -414,18 +412,6 @@ tr:hover td{background:#fafaf8}
 
 <script>
 const ADMIN_PASSWORD = 'Trainer2026';
-const builtinTopics = [
-  {id:677282,name:"IT System Terms \u2014 JP\u2192EN",speaker:"Tanaka-san",lang:"ja",meeting:"IT Vocabulary Drill",sentences:["プッシュ配信", "変数", "メールアーカイブ", "アカウントの復元", "帯域制御", "サイドメニュー", "改修版", "リターン処理状態", "構築", "挿入する", "子JAN", "取り込み"],models:["Push distribution", "Variable", "Mail archive", "Restore your account", "Bandwidth control", "Side menu", "Modified version", "Return processing state", "Build · Setup", "To insert", "Child JAN", "Import"],created:"2026-07-02",builtin:true},
-  {id:706066,name:"IT System Terms \u2014 EN\u2192JP",speaker:"Tanaka-san",lang:"en",meeting:"IT Vocabulary Drill",sentences:["File modification", "Security assessment", "AWS cost", "Tag manager", "Batch", "Pseudo prod", "Programming language", "Return processing state", "Cache server", "Session", "Branch creation", "Module"],models:["ファイル変更 (fairu henkoo)", "セキュリティ診断 (sekyuriti shindan)", "AWSコスト (AWS kosuto)", "タグマネージャー (tagu maneejaa)", "バッチ (bacchi)", "疑似本整 (giji hon sei)", "プログラミング言語 (puroguramingu gengo)", "リターン処理状態 (ritaan shori jootai)", "キャッシュサーバ (kyasshu saaba)", "セッション (sesshon)", "ブランチ作成 (buranchi sakusei)", "モジュール (mojuuru)"],created:"2026-07-02",builtin:true},
-  {id:944484,name:"Business Process \u2014 JP\u2192EN",speaker:"Yamamoto-san",lang:"ja",meeting:"Business Vocabulary Drill",sentences:["認識", "固定", "応答確認", "ユースケース", "しょるい", "作業依頼数", "利用方法", "プリーツ", "てんぽ", "見積書", "最近チェックした商品", "フェーズ"],models:["Awareness · Recognition", "Fixed", "Confirmation", "Use case", "Documents", "Number of work requests", "Usage method", "Pleats", "Store", "Estimation document", "Recently checked products", "Phase"],created:"2026-07-02",builtin:true},
-  {id:115164,name:"Business Process \u2014 EN\u2192JP",speaker:"Yamamoto-san",lang:"en",meeting:"Business Vocabulary Drill",sentences:["Over-the-counter · At the store", "Your own", "Discussion", "Homepage", "Call center", "Register", "Regular meeting", "Article front", "Apology", "Success rate", "Precautions", "Submit·post review"],models:["店頭 (てんとう)", "ご自身の (ごじしんの)", "ぎろん (giron)", "ホームページ (hoomu peeji)", "コールセンター (kooru sentaa)", "お申し込み (おもうしこみ)", "定例会 (ていれいかい)", "読み物フロント (yomimono furonto)", "お詫び (おわび)", "成功率 (せいこうりつ)", "注意事項 (ちゅういじこう)", "レビュー投稿 (rebyuu tookoo)"],created:"2026-07-02",builtin:true},
-  {id:617882,name:"Issues & Bugs \u2014 JP\u2192EN",speaker:"Suzuki-san",lang:"ja",meeting:"Issue Vocabulary Drill",sentences:["バグ", "失敗", "えいきょう", "いじょう", "バグ修正", "影響", "緊急", "解消", "失敗原因", "修正"],models:["Error · Bug", "Failure", "Impact", "Abnormality", "Error fix", "Impact", "Urgent · Emergency", "Resolution · Issue resolved", "Cause of failure", "Fix · Correction"],created:"2026-07-02",builtin:true},
-  {id:151755,name:"Status Terms \u2014 JP\u2192EN",speaker:"Nakamura-san",lang:"ja",meeting:"Status Vocabulary Drill",sentences:["反映済み", "進行中", "開発済み", "保留中", "作成済み", "導入を検討中", "公開中", "未処理"],models:["Already reflected·applied", "In progress", "Developed", "On hold", "Already prepared", "Under consideration for implementation", "Open · Currently published", "Unprocessed"],created:"2026-07-02",builtin:true},
-  {id:500865,name:"Approval Terms \u2014 JP\u2192EN",speaker:"Tanaka-san",lang:"ja",meeting:"Approval Vocabulary Drill",sentences:["承認依頼", "承認待ち", "承認者", "承認", "承認済み"],models:["Request for approval", "Awaiting approval", "Approver", "Approval", "Approved"],created:"2026-07-02",builtin:true},
-  {id:387779,name:"Mixed MUJI Vocab \u2014 JP\u2192EN",speaker:"Tanaka-san",lang:"ja",meeting:"MUJI Mixed Vocabulary",sentences:["期末在庫", "残高照会", "各国特有のバッチ", "お届け時間帯", "更新履歴", "文字タイプ", "コールセンター", "実際に", "キャッシュサーバ", "経度", "AWSコスト", "新規", "イベント予約", "踏み台サーバー", "みちゃく"],models:["Last remaining stocks", "Balance inquiry", "Country-specific batch", "Delivery time range", "Update history", "Character type", "Call center", "Actually", "Cache server", "Longitude", "AWS cost", "New item", "Event reservation", "Bastion server", "Not yet arrived"],created:"2026-07-02",builtin:true},
-  {id:259286,name:"Mixed MUJI Vocab \u2014 EN\u2192JP",speaker:"Tanaka-san",lang:"en",meeting:"MUJI Mixed Vocabulary",sentences:["Authentication", "E-mail", "SAP sending verification", "Mail archive", "Confirmation items", "Integrated service management", "Array (programming)", "Member guide", "Product department", "Wireless LAN", "To save", "Visualization", "Operation is normal", "Secondary menu", "Area"],models:["認証 (にんしょう)", "電子メール (でんしメール)", "SAP配信結果確認 (SAP haishinkekkakakunin)", "メールアーカイブ (meeru aakaibuu)", "確認箇所 (かくにんかしょ)", "統合サービス管理 (toogoo saabisu kanri)", "配列 (はいれつ)", "会員案内 (かいいんあんない)", "商品部 (しょうひんぶ)", "無線LAN (むせんLAN)", "保存する (ほぞんする)", "可視化 (かしか)", "動作が正常 (どうさがせいじょう)", "セカンダリメニュー (sekandari menyuu)", "領域 (りょういき)"],created:"2026-07-02",builtin:true}
-];
-
 const STORAGE_KEY = 'jp_practice_results';
 const JSONBIN_ID = '6a461e1af5f4af5e29528a02';
 const JSONBIN_KEY = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
@@ -823,7 +809,7 @@ async function revealAndScore(){
   const comments={10:"Flawless",9:"Near-perfect",8:"Strong",7:"Good",6:"Acceptable",5:"Developing",4:"Needs work",3:"Keep practicing",2:"Review model",1:"Try again"};
   if(spokenText){const yb=document.getElementById('your-'+sentIdx);yb.textContent='"'+spokenText+'"';yb.classList.add('show');}
   const modelText = (cur===-1&&window._customTopic&&window._customTopic.models)?window._customTopic.models[sentIdx]:(sent?sent.model:'');
-  document.getElementById('modeltext-'+sentIdx).textContent=modelText;
+  document.getElementById('modeltext-'+sentIdx).textContent=modelText||'';
   document.getElementById('model-'+sentIdx).classList.add('show');
   document.getElementById('jp-'+sentIdx).classList.remove('blurred');
   document.getElementById('scoreSection').style.display='block';
@@ -860,10 +846,12 @@ document.getElementById('btnPlay').onclick=function(){
       document.getElementById('btnRepeat').disabled=false;setStep(2);
     });
   } else {
-    const sent=scenarios[cur].sentences[sentIdx];
+    const s=scenarios[cur];
+    const sent=s.sentences[sentIdx];
+    const isEN=s.lang==='en';
     document.getElementById('tipBox').style.display='block';
     document.getElementById('tipBox').textContent=sent.tip;
-    speak(sent.jp,()=>{
+    speakLang(sent.jp,isEN?'en-US':'ja-JP',()=>{
       document.getElementById('waveJP').style.display='none';
       document.getElementById('btnRepeat').disabled=false;setStep(2);
     });
@@ -878,7 +866,10 @@ document.getElementById('btnRepeat').onclick=function(){
       document.getElementById('waveJP').style.display='none';this.disabled=false;document.getElementById('btnPlay').disabled=false;
     });
   } else {
-    speak(scenarios[cur].sentences[sentIdx].jp,()=>{document.getElementById('waveJP').style.display='none';this.disabled=false;document.getElementById('btnPlay').disabled=false;});
+    const s=scenarios[cur];
+    speakLang(s.sentences[sentIdx].jp,s.lang==='en'?'en-US':'ja-JP',()=>{
+      document.getElementById('waveJP').style.display='none';this.disabled=false;document.getElementById('btnPlay').disabled=false;
+    });
   }
 };
 
@@ -943,8 +934,8 @@ const TOPICS_KEY='jp_practice_custom_topics';
 function loadTopics(){
   try{
     const saved=JSON.parse(localStorage.getItem(TOPICS_KEY)||'[]');
-    return [...builtinTopics,...saved];
-  }catch(e){return builtinTopics.slice();}
+    return [...saved];
+  }catch(e){return [];}
 }
 function loadUserTopics(){
   try{return JSON.parse(localStorage.getItem(TOPICS_KEY)||'[]');}catch(e){return[];}
@@ -1018,13 +1009,8 @@ function renderSavedTopics(){
   const list=document.getElementById('savedTopicsList');
   const userTopics=loadUserTopics();
   let html='';
-  html+='<div style="padding:8px 14px;font-size:11px;color:#888780;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;background:#fafaf8;border-bottom:1px solid #f1efe8">Built-in MUJI vocabulary ('+builtinTopics.length+')</div>';
-  html+=builtinTopics.map(t=>`
-    <div class="saved-row">
-      <div class="saved-name">${t.name}</div>
-      <div class="saved-meta">${t.lang==='en'?'EN→JP':'JP→EN'} · ${t.sentences.length} terms · ${t.speaker}</div>
-      <span style="font-size:11px;color:#3b6d11;background:#eaf3de;padding:2px 8px;border-radius:10px">Built-in</span>
-    </div>`).join('');
+  
+  
   if(userTopics.length){
     html+='<div style="padding:8px 14px;font-size:11px;color:#888780;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;background:#fafaf8;border-bottom:1px solid #f1efe8;border-top:1px solid #f1efe8">Your custom topics ('+userTopics.length+')</div>';
     html+=userTopics.map(t=>`
@@ -1065,33 +1051,38 @@ function buildTopicSelectScreen(){
   const customWrap=document.getElementById('userTopicGroupWrap');
   if(!scenGrid)return;
 
+  // JP→EN scenarios
   scenGrid.innerHTML='';
+  // EN→JP grid — inject dynamically
+  let enGrid = document.getElementById('enScenarioGrid');
+  if(!enGrid){
+    enGrid = document.createElement('div');
+    enGrid.id='enScenarioGrid';
+    enGrid.className='topic-grid';
+    const enLabel = document.createElement('div');
+    enLabel.className='topic-group-label';
+    enLabel.textContent='EN → JP Interpretation';
+    scenGrid.parentNode.insertBefore(enLabel, scenGrid.nextSibling);
+    scenGrid.parentNode.insertBefore(enGrid, enLabel.nextSibling);
+  }
+  enGrid.innerHTML='';
+
   scenarios.forEach((s,i)=>{
+    const isEN = s.lang==='en';
     const card=document.createElement('div');
     card.className='topic-pick-card';
     card.innerHTML=`<div class="topic-pick-name">${s.label}</div>
       <div class="topic-pick-meta">
-        <span class="topic-pick-badge tpb-ja">JP→EN</span>
+        <span class="topic-pick-badge ${isEN?'tpb-en':'tpb-ja'}">${isEN?'EN→JP':'JP→EN'}</span>
         <span>${s.sentences.length} sentences</span>
         <span>${s.diff}</span>
       </div>`;
     card.onclick=()=>startScenario(i);
-    scenGrid.appendChild(card);
+    if(isEN) enGrid.appendChild(card);
+    else scenGrid.appendChild(card);
   });
 
   mujiGrid.innerHTML='';
-  builtinTopics.forEach(t=>{
-    const card=document.createElement('div');
-    card.className='topic-pick-card';
-    card.innerHTML=`<div class="topic-pick-name">${t.name}</div>
-      <div class="topic-pick-meta">
-        <span class="topic-pick-badge ${t.lang==='en'?'tpb-en':'tpb-ja'}">${t.lang==='en'?'EN→JP':'JP→EN'}</span>
-        <span class="topic-pick-badge tpb-builtin">MUJI vocab</span>
-        <span>${t.sentences.length} terms</span>
-      </div>`;
-    card.onclick=()=>startCustomTopic(t);
-    mujiGrid.appendChild(card);
-  });
 
   const userTopics=loadUserTopics();
   if(userTopics.length){
