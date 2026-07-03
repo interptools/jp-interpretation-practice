@@ -732,9 +732,10 @@ async function openTrainee(name){
   const tbody=document.getElementById('traineeResultsBody');
   tbody.innerHTML='';
   results.slice().reverse().forEach((r,i)=>{
-    const realIdx=results.length-1-i;
     const sc=r.score;
-    const scoreDropdown=`<select onchange="adminSetScore(${realIdx},this.value)" style="font-size:12px;padding:3px 6px;border-radius:4px;border:1px solid #d4c9a8;background:#faf8f2;cursor:pointer;">
+    const safedt=r.datetime.replace(/'/g,"\\'");
+    const safename=r.name.replace(/'/g,"\\'");
+    const scoreDropdown=`<select onchange="adminSetScore('${safedt}','${safename}',this.value)" style="font-size:12px;padding:3px 6px;border-radius:4px;border:1px solid #d4c9a8;background:#faf8f2;cursor:pointer;">
       <option value="" ${sc===null?'selected':''}>— Pending —</option>
       <option value="3" ${sc===3?'selected':''}>3 — Perfect</option>
       <option value="2" ${sc===2?'selected':''}>2 — Same meaning</option>
@@ -760,18 +761,11 @@ function backToTrainees(){
   hide('traineeDetailView',true);
 }
 
-async function adminSetScore(idx, val){
+async function adminSetScore(datetime, name, val){
   const bin = await jbLoad()||{};
   const allResults = bin.results||[];
-  const userResults = allResults.filter(r=>r.name===selectedTrainee);
-  const reversed = userResults.slice().reverse();
-  const target = reversed[idx];
-  if(!target){showToast('Could not find result','#c0392b');return;}
   const globalIdx = allResults.findIndex(r=>
-    r.name===target.name &&
-    r.scenario===target.scenario &&
-    r.sentence===target.sentence &&
-    r.datetime===target.datetime
+    r.name===name && r.datetime===datetime
   );
   if(globalIdx===-1){showToast('Could not match result','#c0392b');return;}
   allResults[globalIdx].score = val===''?null:parseInt(val);
