@@ -911,88 +911,101 @@ async function uploadAudioToCloudinary(blob){
 function startRec(){
   const ta=document.getElementById('transcriptArea');ta.style.display='block';ta.textContent='(listening...)';
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ta.textContent='Not supported. Use the Type option instead.';return;}
-
   audioChunks=[];lastAudioURL=null;
 
-  // Start Speech Recognition first (it manages the mic)
-  recognition=new SR();
-  const recLang=(window._customTopic&&window._customTopic.lang==='en')?'ja-JP':'en-US';
-  recognition.lang=recLang;
-  recognition.continuous=false;
-  recognition.interimResults=true;
-  let _recDone=false;
-  let _finalText='';
+  // Check if MediaRecorder is supported (all modern browsers)
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    ta.textContent='Microphone not supported on this browser. Use the Type option.';
+    return;
+  }
 
-  recognition.onresult=(e)=>{
-    if(_recDone)return;
-    let interim='', final='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t=e.results[i][0].transcript;
-      if(e.results[i].isFinal){final+=t;}
-      else{interim+=t;}
+  // Start mic recording (works on ALL devices)
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
+    mediaRecorder.start(100);
+    ta.textContent=SR?'(listening...)':'🎙 Recording... tap Stop when done';
+
+    // If Speech Recognition supported, also run transcription
+    if(SR){
+      recognition=new SR();
+      const recLang=(window._customTopic&&window._customTopic.lang==='en')?'ja-JP':'en-US';
+      recognition.lang=recLang;
+      recognition.continuous=false;
+      recognition.interimResults=true;
+      let _recDone=false;
+      let _finalText='';
+
+      recognition.onresult=(e)=>{
+        if(_recDone)return;
+        let interim='',final='';
+        for(let i=e.resultIndex;i<e.results.length;i++){
+          const t=e.results[i][0].transcript;
+          if(e.results[i].isFinal){final+=t;}else{interim+=t;}
+        }
+        if(final){_finalText=final.trim();spokenText=_finalText;ta.textContent=_finalText;}
+        else if(interim){ta.textContent=interim;}
+      };
+
+      recognition.onerror=(e)=>{
+        if(e.error==='no-speech'||e.error==='aborted')return;
+        ta.textContent='🎙 Recording... (transcription unavailable)';
+      };
+
+      recognition.onend=async()=>{
+        if(_recDone)return;
+        if(recognition._skipOnEnd)return;
+        _recDone=true;
+        if(_finalText)spokenText=_finalText;
+        await stopAndUpload(ta,spokenText);
+      };
+
+      try{recognition.start();}catch(e){
+        // Speech recognition failed — audio-only mode
+        ta.textContent='🎙 Recording... tap Stop when done';
+      }
     }
-    if(final){
-      _finalText=final.trim();
-      spokenText=_finalText;
-      ta.textContent=_finalText;
-    } else if(interim){
-      ta.textContent=interim;
-    }
-  };
 
-  recognition.onerror=(e)=>{
-    if(e.error==='no-speech')return;
-    if(e.error==='aborted')return;
-    ta.textContent='Mic blocked — use the Type option.';
-  };
-
-  recognition.onend=async()=>{
-    if(_recDone)return;
-    if(recognition._skipOnEnd)return;
-    _recDone=true;
-    if(_finalText) spokenText=_finalText;
+  }).catch(err=>{
+    mediaRecorder=null;
+    ta.textContent='Microphone access denied. Use the Type option.';
     document.getElementById('waveEN').style.display='none';
     document.getElementById('btnStop').disabled=true;
     document.getElementById('btnRecord').disabled=false;
+  });
+}
 
-    // Stop MediaRecorder if running, then upload
-    if(mediaRecorder&&mediaRecorder.state!=='inactive'){
-      mediaRecorder.onstop=async()=>{
-        const blob=new Blob(audioChunks,{type:'audio/webm'});
-        lastAudioURL=await uploadAudioToCloudinary(blob);
-        mediaRecorder.stream.getTracks().forEach(t=>t.stop());
-        if(spokenText&&spokenText.trim().length>0){
-          ta.textContent=spokenText;
-          revealAndScore();
-        } else {
-          ta.textContent='Nothing captured. Try again or use Type.';
-        }
-      };
-      mediaRecorder.stop();
-    } else {
-      // MediaRecorder unavailable — still submit transcript if we have it
-      if(spokenText&&spokenText.trim().length>0){
-        ta.textContent=spokenText;
+async function stopAndUpload(ta, transcript){
+  document.getElementById('waveEN').style.display='none';
+  document.getElementById('btnStop').disabled=true;
+  document.getElementById('btnRecord').disabled=false;
+
+  if(mediaRecorder&&mediaRecorder.state!=='inactive'){
+    mediaRecorder.onstop=async()=>{
+      const blob=new Blob(audioChunks,{type:'audio/webm'});
+      ta.textContent=transcript?transcript:'⏳ Uploading audio...';
+      lastAudioURL=await uploadAudioToCloudinary(blob);
+      mediaRecorder.stream.getTracks().forEach(t=>t.stop());
+      if(transcript&&transcript.trim().length>0){
+        ta.textContent=transcript;
+        revealAndScore();
+      } else if(lastAudioURL){
+        // Audio-only mode — no transcript but audio uploaded
+        spokenText='';
+        ta.textContent='✓ Audio recorded (no transcription)';
         revealAndScore();
       } else {
         ta.textContent='Nothing captured. Try again or use Type.';
       }
+    };
+    mediaRecorder.stop();
+  } else {
+    if(transcript&&transcript.trim().length>0){
+      revealAndScore();
+    } else {
+      ta.textContent='Nothing captured. Try again or use Type.';
     }
-  };
-
-  // Start speech recognition
-  try{
-    recognition.start();
-    // Try to attach MediaRecorder separately (non-blocking)
-    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-      try{
-        mediaRecorder=new MediaRecorder(stream);
-        mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
-        mediaRecorder.start(100); // collect data every 100ms
-      }catch(e){mediaRecorder=null;}
-    }).catch(()=>{mediaRecorder=null;});
-  }catch(e){ta.textContent='Could not start. Use the Type option.';}
+  }
 }
 
 async function revealAndScore(){
@@ -1079,11 +1092,12 @@ document.getElementById('btnRecord').onclick=function(){
 };
 
 document.getElementById('btnStop').onclick=function(){
-  if(recognition)try{recognition.stop();}catch(e){}
-  // MediaRecorder stop is handled in recognition.onend
+  if(recognition){try{recognition._skipOnEnd=true;recognition.stop();}catch(e){}}
   document.getElementById('waveEN').style.display='none';
   this.disabled=true;
   document.getElementById('btnRecord').disabled=false;
+  const ta=document.getElementById('transcriptArea');
+  stopAndUpload(ta, spokenText);
 };
 
 document.getElementById('btnType').onclick=function(){
