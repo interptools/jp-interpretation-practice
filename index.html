@@ -42,8 +42,7 @@ input[type=text]:focus,input[type=password]:focus{border-color:#378add}
 .tab.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
 
 /* MAIN GRID */
-.main-grid{display:grid;grid-template-columns:1fr 370px;gap:12px;align-items:start}
-@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+.main-grid{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
 
 /* MEETING CARD */
 .meeting-card{background:#fff;border:1px solid #d3d1c7;border-radius:12px;overflow:hidden}
@@ -81,7 +80,7 @@ input[type=text]:focus,input[type=password]:focus{border-color:#378add}
 .model-lbl{font-size:10px;color:#b45309;font-weight:500;margin-bottom:2px}
 
 /* BOOTH */
-.booth-card{background:#fff;border:1px solid #d3d1c7;border-radius:12px;padding:14px;position:sticky;top:16px}
+.booth-card{background:#fff;border:1px solid #d3d1c7;border-radius:12px;padding:20px}
 .booth-title{font-size:11px;color:#888780;text-transform:uppercase;letter-spacing:0.05em;font-weight:500;margin-bottom:10px}
 .step-pills{display:flex;gap:5px;margin-bottom:10px}
 .sp{font-size:11px;padding:3px 9px;border-radius:10px;background:#f1efe8;color:#888780;font-weight:500}
@@ -98,7 +97,7 @@ input[type=text]:focus,input[type=password]:focus{border-color:#378add}
 textarea.type-input{width:100%;font-size:13px;padding:8px 10px;border:1px solid #d3d1c7;border-radius:7px;margin-bottom:8px;min-height:60px;font-family:inherit;resize:vertical;background:#fff;color:#1a1a18;display:none}
 textarea.type-input:focus{outline:none;border-color:#378add}
 .btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px}
-button{font-size:12px;padding:7px 11px;border-radius:7px;border:1px solid #d3d1c7;background:#fff;color:#1a1a18;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:500;transition:all 0.15s;white-space:nowrap;font-family:inherit}
+button{font-size:13px;padding:9px 16px;border-radius:7px;border:1px solid #d3d1c7;background:#fff;color:#1a1a18;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:all 0.15s;white-space:nowrap;font-family:inherit}
 button:hover{background:#f1efe8}
 button:active{transform:scale(0.97)}
 .btn-primary{background:#1a1a18;color:#fff;border-color:#1a1a18}
@@ -742,6 +741,8 @@ function loadScenario(idx){
   document.getElementById('bdgDiff').className='badge '+s.diffClass;
   document.getElementById('sessionBar').textContent='';
   buildConversation();setStep(1);updateProgress();
+  document.getElementById('btnPlay').disabled=false;
+  document.getElementById('btnSkip').disabled=false;
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
 }
 
@@ -777,9 +778,8 @@ function setStep(n){
   document.getElementById('typeInput').value='';
   document.getElementById('scoreSection').style.display='none';
   const il=n===1,ir=n===2,in2=n===3;
-  document.getElementById('btnPlay').disabled=!il;
+  document.getElementById('btnPlay').disabled=false; // always re-enabled; callers control
   document.getElementById('btnRepeat').disabled=!(il&&sentIdx>0);
-  
   document.getElementById('btnRecord').disabled=!ir;
   document.getElementById('btnStop').disabled=true;
   document.getElementById('btnType').disabled=!ir;
@@ -810,18 +810,28 @@ function startRec(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){ta.textContent='Not supported. Use the Type option instead.';return;}
   recognition=new SR();const recLang=(window._customTopic&&window._customTopic.lang==='en')?'ja-JP':'en-US';
-  recognition.lang=recLang;recognition.continuous=true;recognition.interimResults=true;
-  let final='';
+  recognition.lang=recLang;
+  recognition.continuous=false;
+  recognition.interimResults=false;
+  let _recDone=false;
   recognition.onresult=(e)=>{
-    let interim='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal)final+=e.results[i][0].transcript+' ';
-      else interim+=e.results[i][0].transcript;
-    }
-    ta.textContent=(final+interim).trim()||'(listening...)';spokenText=final.trim();
+    if(_recDone)return;
+    const t=e.results[e.results.length-1][0].transcript.trim();
+    if(t){spokenText=t;ta.textContent=t;}
   };
-  recognition.onerror=(e)=>{ta.textContent='Mic blocked — use the Type option.';};
-  recognition.onend=()=>{if(spokenText)revealAndScore();};
+  recognition.onerror=(e)=>{
+    if(e.error==='no-speech')return;
+    ta.textContent='Mic blocked — use the Type option.';
+  };
+  recognition.onend=()=>{
+    if(_recDone)return;
+    _recDone=true;
+    document.getElementById('waveEN').style.display='none';
+    document.getElementById('btnStop').disabled=true;
+    document.getElementById('btnRecord').disabled=false;
+    if(spokenText&&spokenText.trim().length>0)revealAndScore();
+    else ta.textContent='Nothing captured. Try again or use Type.';
+  };
   try{recognition.start();}catch(e){ta.textContent='Could not start. Use the Type option.';}
 }
 
@@ -1085,13 +1095,12 @@ function buildTabs(){
 
 function buildTopicSelectScreen(){
   const scenGrid=document.getElementById('builtinScenarioGrid');
-  const mujiGrid=document.getElementById('builtinMujiGrid');
+  const enGrid=document.getElementById('enScenarioGrid');
   const customGrid=document.getElementById('customTopicGrid');
   const customWrap=document.getElementById('userTopicGroupWrap');
   if(!scenGrid)return;
 
   scenGrid.innerHTML='';
-  const enGrid = document.getElementById('enScenarioGrid');
   if(enGrid) enGrid.innerHTML='';
 
   scenarios.forEach((s,i)=>{
@@ -1108,8 +1117,6 @@ function buildTopicSelectScreen(){
     if(isEN && enGrid) enGrid.appendChild(card);
     else scenGrid.appendChild(card);
   });
-
-  mujiGrid.innerHTML='';
 
   const userTopics=loadUserTopics();
   if(userTopics.length){
