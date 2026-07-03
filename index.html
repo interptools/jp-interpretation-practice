@@ -858,8 +858,10 @@ function setStep(n){
   document.getElementById('typeInput').style.display='none';
   document.getElementById('typeInput').value='';
   document.getElementById('scoreSection').style.display='none';
+  // Reset audio state for new sentence
+  if(n===1){lastAudioURL=null;audioChunks=[];mediaRecorder=null;}
   const il=n===1,ir=n===2,in2=n===3;
-  document.getElementById('btnPlay').disabled=false; // always re-enabled; callers control
+  document.getElementById('btnPlay').disabled=false;
   document.getElementById('btnRepeat').disabled=!(il&&sentIdx>0);
   document.getElementById('btnRecord').disabled=!ir;
   document.getElementById('btnStop').disabled=true;
@@ -1093,11 +1095,17 @@ document.getElementById('btnSubmitType').onclick=function(){
 };
 
 document.getElementById('btnSkip').onclick=function(){
-  spokenText='';
+  spokenText='';lastAudioURL=null;
   if(recognition){
     try{
-      recognition._skipOnEnd=true; // signal onend to skip submission
+      recognition._skipOnEnd=true;
       recognition.stop();
+    }catch(e){}
+  }
+  if(mediaRecorder&&mediaRecorder.state!=='inactive'){
+    try{
+      mediaRecorder.onstop=()=>{mediaRecorder.stream.getTracks().forEach(t=>t.stop());};
+      mediaRecorder.stop();
     }catch(e){}
   }
   revealAndScore();
