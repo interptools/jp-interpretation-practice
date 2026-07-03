@@ -307,8 +307,7 @@ tr:hover td{background:#fafaf8}
           <button id="btnSkip" disabled>Skip</button>
         </div>
         <div class="score-section" id="scoreSection">
-          <div class="score-row"><span class="score-big" id="scoreNum">—</span><span class="score-ten" id="scoreTen"></span><span class="score-comment" id="scoreComment"></span></div>
-          <div id="feedbackList"></div>
+          <div class="score-row"><span class="score-comment" id="scoreComment" style="color:#2ecc71;font-weight:600;font-size:13px;">✓ Answer submitted — pending admin review</span></div>
         </div>
       </div>
     </div>
@@ -355,7 +354,7 @@ tr:hover td{background:#fafaf8}
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Scenario</th><th>Sentence</th><th>Score</th><th>Their rendering</th><th>Model rendering</th><th>Date / Time</th></tr></thead>
+            <thead><tr><th>Scenario</th><th>Sentence</th><th>Score (Admin)</th><th>Their rendering</th><th>Model rendering</th><th>Date / Time</th></tr></thead>
             <tbody id="traineeResultsBody"></tbody>
           </table>
         </div>
@@ -687,20 +686,56 @@ async function openTrainee(name){
     <div class="stat-card"><div class="stat-label">Scenarios tried</div><div class="stat-val">${scenarios.length}</div><div class="stat-sub">${scenarios.map(s=>s.split('·')[0].trim()).join(', ')}</div></div>`;
   const tbody=document.getElementById('traineeResultsBody');
   tbody.innerHTML='';
-  results.slice().reverse().forEach(r=>{
+  results.slice().reverse().forEach((r,i)=>{
+    const realIdx=results.length-1-i;
     const sc=r.score;
-    const cls=sc===null?'s-skip':sc===3?'s-high':sc===2?'s-mid':sc===1?'s-low':'s-skip';
-    const label=sc===null?'Skip':sc+'/3';
+    const scoreDropdown=`<select onchange="adminSetScore(${realIdx},this.value)" style="font-size:12px;padding:3px 6px;border-radius:4px;border:1px solid #d4c9a8;background:#faf8f2;cursor:pointer;">
+      <option value="" ${sc===null?'selected':''}>— Pending —</option>
+      <option value="3" ${sc===3?'selected':''}>3 — Perfect</option>
+      <option value="2" ${sc===2?'selected':''}>2 — Same meaning</option>
+      <option value="1" ${sc===1?'selected':''}>1 — Partial</option>
+      <option value="0" ${sc===0?'selected':''}>0 — No answer</option>
+    </select>`;
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.scenario}</td><td style="max-width:180px;word-break:break-word">${r.sentence}</td><td><span class="score-pill ${cls}">${label}</span></td><td style="max-width:180px;word-break:break-word;font-style:italic;color:#5f5e5a">${r.rendering||'—'}</td><td style="max-width:180px;word-break:break-word;color:#92400e">${r.model}</td><td style="white-space:nowrap;color:#888780">${r.datetime}</td>`;
+    tr.innerHTML=`<td>${r.scenario}</td><td style="max-width:180px;word-break:break-word">${r.sentence}</td><td>${scoreDropdown}</td><td style="max-width:180px;word-break:break-word;font-style:italic;color:#5f5e5a">${r.rendering||'—'}</td><td style="max-width:180px;word-break:break-word;color:#92400e">${r.model}</td><td style="white-space:nowrap;color:#888780">${r.datetime}</td>`;
     tbody.appendChild(tr);
   });
+}
+
+function showToast(msg, color='#2ecc71'){
+  let el=document.getElementById('admin-toast');
+  if(!el){el=document.createElement('div');el.id='admin-toast';el.style.cssText='position:fixed;bottom:1rem;right:1rem;background:#1a1a18;color:#f5f0e8;padding:0.5rem 1rem;border-radius:4px;font-size:0.75rem;z-index:9999;transition:opacity 0.5s;';document.body.appendChild(el);}
+  el.textContent=msg;el.style.color=color;el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',2000);
 }
 
 function backToTrainees(){
   selectedTrainee=null;
   hide('traineeSelectView',false);
   hide('traineeDetailView',true);
+}
+
+async function adminSetScore(idx, val){
+  const allResults = await loadResultsFromServer();
+  const userResults = allResults.filter(r=>r.name===selectedTrainee);
+  const reversed = userResults.slice().reverse();
+  const target = reversed[idx];
+  if(!target) return;
+  const globalIdx = allResults.findIndex(r=>
+    r.name===target.name &&
+    r.scenario===target.scenario &&
+    r.sentence===target.sentence &&
+    r.datetime===target.datetime
+  );
+  if(globalIdx===-1) return;
+  allResults[globalIdx].score = val===''?null:parseInt(val);
+  const ok = await jbSave(allResults);
+  if(ok){
+    showToast('Score saved ✓');
+    renderTraineeDetail(selectedTrainee);
+  } else {
+    showToast('Failed to save score','#c0392b');
+  }
 }
 
 function clearTraineeResults(){
@@ -844,53 +879,15 @@ async function revealAndScore(){
   const s=isCustom?null:scenarios[cur];
   const sent=isCustom?null:(s?s.sentences[sentIdx]:null);
 
-  // Scoring: 3=perfect, 2=same meaning, 1=has answer but far, 0=no answer
-  const comments={3:"Perfect",2:"Good — same meaning",1:"Partial — keep practicing",0:"No answer"};
-  const hits=[],misses=[];
-  let sc=0;
-
-  if(!spokenText||!spokenText.trim()){
-    sc=0;
-  } else {
-    sc=1; // has an answer
-    // Get model for comparison
-    const modelForScore=(isCustom&&window._customTopic&&window._customTopic.models)?window._customTopic.models[sentIdx]:(sent?sent.model:'');
-    const u=spokenText.toLowerCase().trim();
-    const m=(modelForScore||'').toLowerCase().trim();
-    if(m){
-      // Check word overlap
-      const uWords=new Set(u.split(/\s+/).filter(w=>w.length>3));
-      const mWords=m.split(/\s+/).filter(w=>w.length>3);
-      const matched=mWords.filter(w=>uWords.has(w));
-      const overlap=mWords.length>0?matched.length/mWords.length:0;
-      if(overlap>=0.7) sc=3; // 70%+ words match = perfect
-      else if(overlap>=0.35) sc=2; // 35-70% = same meaning
-      else sc=1; // has answer but far
-      // Track key terms
-      if(!isCustom&&s&&s.terms){
-        s.terms.forEach(([en,jp])=>{
-          const src=sent&&sent.jp?sent.jp:u;
-          if(src.includes(jp)||m.includes(en.toLowerCase())){
-            if(u.includes(en.toLowerCase().split(' ')[0])){hits.push(en);}
-            else{misses.push(en);}
-          }
-        });
-      }
-    }
-  }
-  if(spokenText){totalScore+=sc;scoredCount++;}
   if(spokenText){const yb=document.getElementById('your-'+sentIdx);yb.textContent='"'+spokenText+'"';yb.classList.add('show');}
   const modelText = (cur===-1&&window._customTopic&&window._customTopic.models)?window._customTopic.models[sentIdx]:(sent?sent.model:'');
   document.getElementById('modeltext-'+sentIdx).textContent=modelText||'';
   document.getElementById('model-'+sentIdx).classList.add('show');
   document.getElementById('jp-'+sentIdx).classList.remove('blurred');
   document.getElementById('scoreSection').style.display='block';
-  document.getElementById('scoreNum').textContent=spokenText?sc:'—';
-  document.getElementById('scoreComment').textContent=spokenText?(comments[sc]||''):'Skipped';
-  document.getElementById('scoreTen').textContent=spokenText?'/3':'';
-  const fl=document.getElementById('feedbackList');fl.innerHTML='';
-  hits.forEach(h=>{const d=document.createElement('div');d.className='fb-item hit';d.textContent='✓ '+h;fl.appendChild(d);});
-  misses.forEach(m=>{const d=document.createElement('div');d.className='fb-item miss';d.textContent='△ '+m;fl.appendChild(d);});
+  document.getElementById('scoreComment').textContent=spokenText?'✓ Answer submitted — pending admin review':'Skipped';
+  document.getElementById('scoreComment').style.color=spokenText?'#2ecc71':'#888780';
+
   const scenarioLabel=isCustom?window._customTopic.name:scenarios[cur].label;
   const sentenceText=isCustom?window._customTopic.sentences[sentIdx]:(sent?sent.jp:'');
   const modelText2=(isCustom&&window._customTopic.models)?window._customTopic.models[sentIdx]:(sent?sent.model:'');
@@ -898,7 +895,7 @@ async function revealAndScore(){
     name:currentUser,
     scenario:scenarioLabel,
     sentence:sentenceText,
-    score:spokenText?sc:null,
+    score:null,
     rendering:spokenText||'',
     model:modelText2,
     datetime:new Date().toLocaleString('en-PH',{timeZone:'Asia/Manila',hour12:false})
@@ -986,18 +983,21 @@ document.getElementById('btnNext').onclick=function(){
   document.getElementById('msg-'+sentIdx).classList.add('done');
   document.getElementById('bubble-'+sentIdx).classList.remove('active-bubble');
   sentIdx++;
-  if(sentIdx>=scenarios[cur].sentences.length){endSession();return;}
+  const totalSents=(cur===-1&&window._customTopic)?window._customTopic.sentences.length:scenarios[cur].sentences.length;
+  if(sentIdx>=totalSents){endSession();return;}
   document.getElementById('msg-'+sentIdx).classList.add('active');
   document.getElementById('bubble-'+sentIdx).classList.add('active-bubble');
-  spokenText='';updateProgress();setStep(1);
+  spokenText='';
+  if(cur!==-1)updateProgress();
+  setStep(1);
   document.getElementById('btnPlay').disabled=false;document.getElementById('btnSkip').disabled=false;
   document.getElementById('msg-'+sentIdx).scrollIntoView({behavior:'smooth',block:'nearest'});
 };
 
 function endSession(){
   document.getElementById('progressFill').style.width='100%';
-  const avg=scoredCount>0?Math.round(totalScore/scoredCount):0;
-  document.getElementById('sessionBar').innerHTML='<strong>Session complete!</strong> '+scenarios[cur].sentences.length+' sentences &nbsp;|&nbsp; Average: '+(scoredCount>0?avg+'/3':'n/a')+' &nbsp;|&nbsp; <button onclick="startScenario(cur)" style="font-size:12px;padding:3px 10px">Try again</button> &nbsp;<button onclick="showTopicSelect()" style="font-size:12px;padding:3px 10px">&#8592; Choose another topic</button>';
+  const totalSents=(cur===-1&&window._customTopic)?window._customTopic.sentences.length:scenarios[cur].sentences.length;
+  document.getElementById('sessionBar').innerHTML='<strong>Session complete!</strong> '+totalSents+' sentences submitted &nbsp;|&nbsp; <em style="color:#888780;font-size:12px">Scores will be reviewed by admin</em> &nbsp;|&nbsp; <button onclick="'+(cur===-1?'startCustomTopic(window._customTopic)':'startScenario(cur)')+'" style="font-size:12px;padding:3px 10px">Try again</button> &nbsp;<button onclick="showTopicSelect()" style="font-size:12px;padding:3px 10px">&#8592; Choose another topic</button>';
   setStep(3);document.getElementById('btnNext').disabled=true;
 }
 
