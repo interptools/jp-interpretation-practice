@@ -628,11 +628,11 @@ function clearTraineeFromServer(name){
 
 /* ---------- AUTH ---------- */
 function showLogin(){
-  hide('loginScreen',false);hide('adminLoginScreen',true);hide('practiceScreen',true);hide('adminScreen',true);
+  hide('loginScreen',false);hide('adminLoginScreen',true);hide('practiceScreen',true);hide('adminScreen',true);hide('myScoresScreen',true);
   document.getElementById('loginName').value='';document.getElementById('loginErr').style.display='none';
 }
 function showAdminLogin(){
-  hide('loginScreen',true);hide('adminLoginScreen',false);hide('practiceScreen',true);hide('adminScreen',true);
+  hide('loginScreen',true);hide('adminLoginScreen',false);hide('practiceScreen',true);hide('adminScreen',true);hide('myScoresScreen',true);
   document.getElementById('adminPwd').value='';document.getElementById('adminErr').style.display='none';
 }
 function hide(id,val){document.getElementById(id).classList.toggle('hidden',val);}
@@ -658,7 +658,7 @@ function doAdminLogin(){
   }
 }
 
-function doLogout(){currentUser='';hide('practiceScreen',true);showLogin();}
+function doLogout(){currentUser='';hide('practiceScreen',true);hide('myScoresScreen',true);showLogin();}
 
 document.getElementById('loginName').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
@@ -761,25 +761,26 @@ function backToTrainees(){
 }
 
 async function adminSetScore(idx, val){
-  const allResults = await loadResultsFromServer();
+  const bin = await jbLoad()||{};
+  const allResults = bin.results||[];
   const userResults = allResults.filter(r=>r.name===selectedTrainee);
   const reversed = userResults.slice().reverse();
   const target = reversed[idx];
-  if(!target) return;
+  if(!target){showToast('Could not find result','#c0392b');return;}
   const globalIdx = allResults.findIndex(r=>
     r.name===target.name &&
     r.scenario===target.scenario &&
     r.sentence===target.sentence &&
     r.datetime===target.datetime
   );
-  if(globalIdx===-1) return;
+  if(globalIdx===-1){showToast('Could not match result','#c0392b');return;}
   allResults[globalIdx].score = val===''?null:parseInt(val);
-  const ok = await jbSave(allResults);
-  if(ok){
-    showToast('Score saved ✓');
-  } else {
-    showToast('Failed to save score','#c0392b');
-  }
+  bin.results = allResults;
+  try{
+    const r=await fetch(JSONBIN_URL,{method:'PUT',headers:_jbHeaders,body:JSON.stringify(bin)});
+    if(r.ok) showToast('Score saved ✓');
+    else showToast('Failed to save score','#c0392b');
+  }catch(e){showToast('Failed to save score','#c0392b');}
 }
 
 function clearTraineeResults(){
@@ -1331,6 +1332,7 @@ function doAdminLogin(){
 
 async function showMyScores(){
   document.getElementById('practiceScreen').classList.add('hidden');
+  document.getElementById('adminLoginScreen').classList.add('hidden');
   document.getElementById('myScoresScreen').classList.remove('hidden');
   document.getElementById('myScoresNavUser').textContent=currentUser;
   document.getElementById('myScoresLoading').classList.remove('hidden');
