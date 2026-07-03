@@ -932,16 +932,19 @@ document.getElementById('btnPlay').onclick=function(){
 
 document.getElementById('btnRepeat').onclick=function(){
   document.getElementById('waveJP').style.display='flex';this.disabled=true;document.getElementById('btnPlay').disabled=true;
+  const _repeatDone=()=>{
+    document.getElementById('waveJP').style.display='none';
+    this.disabled=false;
+    document.getElementById('btnPlay').disabled=false;
+  };
   if(cur===-1&&window._customTopic){
     const topic=window._customTopic;
-    speakLang(topic.sentences[sentIdx],topic.lang==='en'?'en-US':'ja-JP',()=>{
-      document.getElementById('waveJP').style.display='none';this.disabled=false;document.getElementById('btnPlay').disabled=false;
-    });
+    const isEN=topic.lang==='en';
+    speakLang(topic.sentences[sentIdx],isEN?'en-US':'ja-JP',_repeatDone);
   } else {
     const s=scenarios[cur];
-    speakLang(s.sentences[sentIdx].jp,s.lang==='en'?'en-US':'ja-JP',()=>{
-      document.getElementById('waveJP').style.display='none';this.disabled=false;document.getElementById('btnPlay').disabled=false;
-    });
+    const isEN=s.lang==='en';
+    speakLang(s.sentences[sentIdx].jp,isEN?'en-US':'ja-JP',_repeatDone);
   }
 };
 
@@ -1003,16 +1006,60 @@ window.speechSynthesis&&window.speechSynthesis.addEventListener('voiceschanged',
 /* ---------- CUSTOM TOPICS ---------- */
 const TOPICS_KEY='jp_practice_custom_topics';
 
+// Load topics from JSONBin cloud
+async function jbLoadTopics(){
+  try{
+    const r=await fetch(JSONBIN_URL+'/latest',{headers:{'X-Master-Key':JSONBIN_KEY,'X-Bin-Versioning':'false'}});
+    if(r.ok){const d=await r.json();return d.record&&d.record.topics?d.record.topics:null;}
+  }catch(e){}
+  return null;
+}
+
+// Save topics to JSONBin cloud
+async function jbSaveTopics(topics){
+  try{
+    // Load current bin data first
+    const r=await fetch(JSONBIN_URL+'/latest',{headers:{'X-Master-Key':JSONBIN_KEY,'X-Bin-Versioning':'false'}});
+    if(r.ok){
+      const d=await r.json();
+      const current=d.record||{};
+      current.topics=topics;
+      await fetch(JSONBIN_URL,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY,'X-Bin-Versioning':'false'},
+        body:JSON.stringify(current)
+      });
+    }
+  }catch(e){console.log('[JSONBin] Topics save error:',e);}
+}
+
 function loadTopics(){
   try{
     const saved=JSON.parse(localStorage.getItem(TOPICS_KEY)||'[]');
     return [...saved];
   }catch(e){return [];}
 }
+
+async function loadTopicsFromCloud(){
+  const cloud=await jbLoadTopics();
+  if(cloud!==null){
+    // Sync to localStorage
+    localStorage.setItem(TOPICS_KEY,JSON.stringify(cloud));
+    return cloud;
+  }
+  return loadUserTopics();
+}
+
 function loadUserTopics(){
   try{return JSON.parse(localStorage.getItem(TOPICS_KEY)||'[]');}catch(e){return[];}
 }
-function saveTopics(t){localStorage.setItem(TOPICS_KEY,JSON.stringify(t.filter(x=>!x.builtin)));}
+
+function saveTopics(t){
+  const filtered=t.filter(x=>!x.builtin);
+  localStorage.setItem(TOPICS_KEY,JSON.stringify(filtered));
+  // Also save to cloud
+  jbSaveTopics(filtered).catch(()=>{});
+}
 
 function splitSentences(text, lang){
   if(lang==='en'){
@@ -1077,8 +1124,10 @@ function deleteTopic(id){
   saveTopics(topics);renderSavedTopics();rebuildPracticeTabs();
 }
 
-function renderSavedTopics(){
+async function renderSavedTopics(){
   const list=document.getElementById('savedTopicsList');
+  const cloudTopics=await loadTopicsFromCloud();
+  if(cloudTopics) localStorage.setItem(TOPICS_KEY,JSON.stringify(cloudTopics));
   const userTopics=loadUserTopics();
   let html='';
   
@@ -1113,6 +1162,14 @@ function rebuildPracticeTabs(){
 
 /* Build topic selection screen */
 function buildTabs(){
+  buildTopicSelectScreenAsync();
+}
+
+async function buildTopicSelectScreenAsync(){
+  const cloudTopics = await loadTopicsFromCloud();
+  if(cloudTopics&&cloudTopics.length){
+    localStorage.setItem(TOPICS_KEY,JSON.stringify(cloudTopics));
+  }
   buildTopicSelectScreen();
 }
 
